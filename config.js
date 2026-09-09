@@ -6,7 +6,7 @@ window.APP_CONFIG = {
   API_DEPLOYMENT_ID: 'AKfycbwEjrAK1MWlfUiAuhxlKkPahb_BYvh7fHkKAk4pTqeAB3GsgykqMKY8sCwERPCtZdt1Gw',
 
   // Obseg, ki ga uporablja trenutni Code.gs.
-  OAUTH_SCOPES: 'https://www.googleapis.com/auth/spreadsheets https://www.googleapis.com/auth/userinfo.email',
+  OAUTH_SCOPES: 'https://www.googleapis.com/auth/spreadsheets https://www.googleapis.com/auth/userinfo.email https://www.googleapis.com/auth/script.send_mail',
 
   ALLOWED_USERS: [
     'joze.malnaric@gmail.com',
