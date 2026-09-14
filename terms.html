@@ -13,10 +13,21 @@
   .box{background:#f6f8f7;border:1px solid #d9e1dd;border-radius:12px;padding:16px;margin:18px 0}
   a{color:#1f4e3d}
   footer{margin-top:40px;padding-top:18px;border-top:1px solid #ddd;color:#6b7280;font-size:14px}
+
+  .page-close{
+    position:fixed;top:12px;right:12px;z-index:9999;
+    width:42px;height:42px;border-radius:50%;border:1px solid #d9e1dd;
+    background:#fff;color:#1f2933;font-size:28px;line-height:38px;
+    text-align:center;text-decoration:none;box-shadow:0 2px 8px rgba(0,0,0,.12);
+    cursor:pointer;
+  }
+
 </style>
 
 </head>
 <body>
+<button class="page-close" type="button" aria-label="Zapri" onclick="closePolicyPage()">×</button>
+
 <h1>Pogoji uporabe</h1>
 <div class="meta">Kletarska evidenca – Vinska klet Lipec<br>Velja od: 9. 9. 2026</div>
 
@@ -66,5 +77,19 @@ E-pošta: <a href="mailto:joze.malnaric@gmail.com">joze.malnaric@gmail.com</a>
 <footer>
 Kletarska evidenca – Vinska klet Lipec · Jože Malnarič · Kal 3, 8333 Semič
 </footer>
+
+<script>
+function closePolicyPage(){
+  try{
+    if(window.opener){ window.close(); }
+  }catch(e){}
+  setTimeout(function(){
+    if(document.visibilityState !== 'hidden'){
+      window.location.href='https://jozemalnaric-eng.github.io/kletarska-lipec/';
+    }
+  },120);
+}
+</script>
+
 </body>
 </html>
