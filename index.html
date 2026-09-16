@@ -13,7 +13,7 @@
     :root{--green:#1f4e3d;--green2:#2f6a53;--bg:#f5f6f3;--card:#fff;--text:#17211b;--muted:#66736b;--line:#dde3df;--safe-top:env(safe-area-inset-top);--safe-bottom:env(safe-area-inset-bottom)}
     *{box-sizing:border-box} html,body{margin:0;background:var(--bg);font-family:-apple-system,BlinkMacSystemFont,"SF Pro Text","Segoe UI",sans-serif;color:var(--text)}
     body{padding-top:var(--safe-top);padding-bottom:calc(82px + var(--safe-bottom))} button,input,select,textarea{font:inherit}
-    .topbar{position:relative;position:sticky;top:0;z-index:20;background:rgba(245,246,243,.94);backdrop-filter:blur(12px);padding:14px 16px 10px 0;border-bottom:1px solid var(--line)}
+    .topbar{position:relative;position:sticky;top:0;z-index:20;background:rgba(245,246,243,.94);backdrop-filter:blur(12px);padding:14px 52px 10px 8px;border-bottom:1px solid var(--line)}
     .topbar h1{margin:0;font-size:24px}.topbar .sub{font-size:13px;color:var(--muted);margin-top:2px} main{padding:14px;max-width:760px;margin:0 auto}
     .screen{display:none}.screen.active{display:block}.grid{display:grid;gap:12px}.card,.form-card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:15px;box-shadow:0 1px 2px rgba(0,0,0,.03)}
     .wine-card{cursor:pointer}.row{display:flex;align-items:center;justify-content:space-between;gap:12px}.title{font-weight:750;font-size:18px}.meta{font-size:13px;color:var(--muted);margin-top:5px}
@@ -37,7 +37,7 @@
     .sale-choice .choice-meta{font-size:13px;color:var(--muted);margin-top:5px}
     .back-link{border:0;background:none;color:var(--green);font-weight:800;padding:4px 0 12px;cursor:pointer}
     @media(max-width:420px){.two{grid-template-columns:1fr}.topbar h1{font-size:22px}}
-    .topbar{padding-left:0;padding-right:54px;text-align:left;overflow:visible}
+    .topbar{padding-left:8px!important;padding-right:52px!important;text-align:left;overflow:visible}
 
 
     .qr-live-wrap{
@@ -195,7 +195,7 @@
 
     /* v40: logo skrajno levo, X skrajno desno */
     .topbar{
-      padding-left:82px !important;
+      padding-left:8px !important;
       padding-right:52px !important;
     }
     .app-brand-logo{
@@ -207,7 +207,7 @@
     }
     @media(max-width:420px){
       .topbar{
-        padding-left:72px !important;
+        padding-left:8px !important;
         padding-right:48px !important;
       }
       .app-brand-logo{
@@ -386,10 +386,23 @@
     }
 
     .topbar h1,.topbar .sub{
-      margin-left:-10px!important;
+      margin-left:0!important;
       padding-left:0!important;
       text-align:left!important;
-      transform:translateX(-2px);
+      transform:none!important;
+    }
+
+    /* v64: logo ni več v glavi, zato glava ne rezervira prostora na levi */
+    .topbar{
+      padding-left:8px !important;
+      padding-right:52px !important;
+    }
+    .topbar h1,
+    .topbar .sub{
+      margin-left:0 !important;
+      padding-left:0 !important;
+      transform:none !important;
+      text-align:left !important;
     }
 </style>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
@@ -409,7 +422,7 @@
     <div id="authError" class="auth-error"></div>
   </div>
 </div>
-<header class="topbar"><h1 id="screenTitle">Kletarska evidenca</h1><div class="sub">Kletarska evidenca - Vinska klet Lipec · v63</div>
+<header class="topbar"><h1 id="screenTitle">Kletarska evidenca</h1><div class="sub">Kletarska evidenca - Vinska klet Lipec · v64</div>
     <button class="app-close-btn" type="button" aria-label="Zapri aplikacijo" onclick="closeLipecApp()">×</button></header>
 <main>
 <section id="screen-home" class="screen active">
