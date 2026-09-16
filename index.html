@@ -422,7 +422,7 @@
     <div id="authError" class="auth-error"></div>
   </div>
 </div>
-<header class="topbar"><h1 id="screenTitle">Kletarska evidenca</h1><div class="sub">Kletarska evidenca - Vinska klet Lipec · v64</div>
+<header class="topbar"><h1 id="screenTitle">Kletarska evidenca</h1><div class="sub">Kletarska evidenca - Vinska klet Lipec · v65</div>
     <button class="app-close-btn" type="button" aria-label="Zapri aplikacijo" onclick="closeLipecApp()">×</button></header>
 <main>
 <section id="screen-home" class="screen active">
@@ -1812,7 +1812,7 @@ function renderHomeWines(){
   `).join('');
 }
 
-function renderWines(){const el=document.getElementById('wineList');if(!DATA.wines.length){el.innerHTML='<div class="empty">Še ni aktivnih vin.</div>';return}el.innerHTML=DATA.wines.map(w=>`<div class="card wine-card" onclick="openWine('${escapeJs(w.ID_vina)}')"><div class="row"><div><div class="title">${escapeHtml(w.Naziv_vina||w.ID_vina)}</div><div class="meta">${escapeHtml(w.Letnik||'')} · ${escapeHtml(tankName(w.Trenutna_cisterna)||'brez cisterne')}</div><div class="meta"><span class="pill">${escapeHtml(w.Status||'')}</span>${String(w.Zacetni_Oe??'').trim()!==''?` <span class="pill">Začetni Oe: ${escapeHtml(w.Zacetni_Oe)}</span>`:''}${wineLatestAnalysisPills(w.ID_vina)}</div></div><div class="qty">${fmt(w.Trenutna_kolicina_L)} L</div></div>${lastWineAnalysesHtml(w.ID_vina)}
+function renderWines(){const el=document.getElementById('wineList');if(!DATA.wines.length){el.innerHTML='<div class="empty">Še ni aktivnih vin.</div>';return}el.innerHTML=DATA.wines.map(w=>`<div class="card wine-card" onclick="openWine('${escapeJs(w.ID_vina)}')"><div class="row"><div><div class="title">${escapeHtml(w.Naziv_vina||w.ID_vina)}</div><div class="meta">${escapeHtml(w.Letnik||'')} · ${escapeHtml(wineCurrentTankText(w))}</div><div class="meta"><span class="pill">${escapeHtml(w.Status||'')}</span>${String(w.Zacetni_Oe??'').trim()!==''?` <span class="pill">Začetni Oe: ${escapeHtml(w.Zacetni_Oe)}</span>`:''}${wineLatestAnalysisPills(w.ID_vina)}</div></div><div class="qty">${fmt(wineCurrentTotalLiters(w))} L</div></div>${lastWineAnalysesHtml(w.ID_vina)}
       ${lastWineProceduresHtml(w.ID_vina)}
       </div>`).join('')}
 function renderTanks(){
