@@ -37,7 +37,7 @@
     .sale-choice .choice-meta{font-size:13px;color:var(--muted);margin-top:5px}
     .back-link{border:0;background:none;color:var(--green);font-weight:800;padding:4px 0 12px;cursor:pointer}
     @media(max-width:420px){.two{grid-template-columns:1fr}.topbar h1{font-size:22px}}
-    .topbar{padding-left:0;padding-right:54px;text-align:left}
+    .topbar{padding-left:0;padding-right:54px;text-align:left;overflow:visible}
 
 
     .qr-live-wrap{
@@ -386,9 +386,10 @@
     }
 
     .topbar h1,.topbar .sub{
-      margin-left:0!important;
+      margin-left:-10px!important;
       padding-left:0!important;
       text-align:left!important;
+      transform:translateX(-2px);
     }
 </style>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
@@ -408,19 +409,43 @@
     <div id="authError" class="auth-error"></div>
   </div>
 </div>
-<header class="topbar"><h1 id="screenTitle">🏠 Klet</h1><div class="sub">Kletarska evidenca - Vinska klet Lipec · v62</div>
+<header class="topbar"><h1 id="screenTitle">Kletarska evidenca</h1><div class="sub">Kletarska evidenca - Vinska klet Lipec · v63</div>
     <button class="app-close-btn" type="button" aria-label="Zapri aplikacijo" onclick="closeLipecApp()">×</button></header>
 <main>
-  <section id="screen-klet" class="screen active">
+<section id="screen-home" class="screen active">
   <div class="klet-home-logo-wrap">
     <img class="klet-home-logo" src="lipec-logo.png" alt="LIPEC">
   </div>
 
   <div class="section-title home-wines-title">Aktivna vina</div>
   <div id="homeWineList" class="grid home-wine-list"></div>
+</section>
+
+<section id="screen-klet" class="screen">
+  <div class="section-title" style="margin-top:4px">Klet</div>
+
+  <div class="cellar-home">
+    <button class="cellar-choice" type="button" onclick="showScreen('wines')">
+      <span class="cellar-ico">🍷</span>
+      <div class="cellar-title">Vina</div>
+      <div class="cellar-meta">Pregled aktivnih vin, zgodovine in postopkov.</div>
+    </button>
+
+    <button class="cellar-choice" type="button" onclick="showScreen('tanks')">
+      <span class="cellar-ico">🛢️</span>
+      <div class="cellar-title">Cisterne</div>
+      <div class="cellar-meta">Pregled cistern, stanja in QR izbire.</div>
+    </button>
+
+    <button class="cellar-choice" type="button" onclick="showScreen('calculations')">
+      <span class="cellar-ico">🧮</span>
+      <div class="cellar-title">Izračuni</div>
+      <div class="cellar-meta">Kletarski izračuni in preračuni.</div>
+    </button>
+  </div>
 
   <div class="screen-back-wrap">
-    <button class="btn btn-soft screen-back-btn" type="button" onclick="goBack()">← Nazaj</button>
+    <button class="btn btn-soft screen-back-btn" type="button" onclick="showScreen('home')">← Na naslovno stran</button>
   </div>
 </section>
 
@@ -877,7 +902,7 @@
 </section>
 </main>
 <nav class="nav">
-  <button class="active" data-screen="klet" onclick="showScreen('klet',this)"><span class="ico">🏠</span>Klet</button>
+  <button data-screen="klet" onclick="showScreen('klet',this)"><span class="ico">🏠</span>Klet</button>
   <button data-screen="warehouse" onclick="showScreen('warehouse',this)"><span class="ico">📦</span>Skladišče</button>
   <button data-screen="costs" onclick="showScreen('costs',this)"><span class="ico">💳</span>Stroški</button>
   <button data-screen="sale" onclick="openSaleHome(this)"><span class="ico">💶</span>Prodaja</button>
@@ -1293,7 +1318,7 @@
   <div class="two"><div><label>Začetni °Oe</label><input inputmode="decimal" name="Zacetni_Oe"></div><div><label>Ciljni sladkor (g/L)</label><input inputmode="decimal" name="Ciljni_sladkor_gL"></div></div><label>Opomba</label><textarea name="Opomba"></textarea><button class="btn btn-primary" type="submit">Shrani vino</button>
 </form></div></div>
 <script>
-let DATA={wines:[],tanks:[],tankBalances:[],warehouse:[],sales:[],grapePurchases:[],grapeOrigins:[],grapeSuppliers:[],lookups:{}};let currentWineId=null;let currentTankId=null;let currentStockId=null;let selectedSaleId='';let currentQrUrl='';let currentStockQrUrl='';let targetQrScanner=null;let qrMediaStream=null;let qrScanRaf=null;let qrScanning=false;let qrLastFrameAt=0;let qrSelectionMode='transferTarget';let transferContextTankId='';let procedureContextTankId='';let pendingSaleWineId='';let pendingStockId='';let GOOGLE_ACCESS_TOKEN='';let GOOGLE_TOKEN_EXPIRES_AT=0;let GOOGLE_TOKEN_CLIENT=null;let CURRENT_GOOGLE_EMAIL='';const URL_PARAMS=new URLSearchParams(location.search);const INITIAL_TANK=URL_PARAMS.get('cisterna')||'';const INITIAL_STOCK=URL_PARAMS.get('zaloga')||'';const TITLES={klet:'🏠 Klet',calculations:'🧮 Izračuni',calcalk:'🍷 Izračun ALK',calcsugar:'🍬 Izračun sladkorja',calcso2:'🧪 Izračun SO₂',wines:'🍷 Vina',procedure:'➕ Nov postopek',analysis:'🧪 Analiza',costs:'💳 Stroški',bottling:'🍾 Stekleničenje',sale:'💶 Prodaja',warehouse:'📦 Skladišče','warehouse-tanks':'🛢️ Zaloga v cisternah','warehouse-bottles':'🍾 Zaloga v steklenicah','warehouse-grapes':'🍇 Nakup grozdja',transfer:'🔄 Pretok',tanks:'🛢️ Cisterne'};let CURRENT_SCREEN='klet';let SCREEN_HISTORY=[];
+let DATA={wines:[],tanks:[],tankBalances:[],warehouse:[],sales:[],grapePurchases:[],grapeOrigins:[],grapeSuppliers:[],lookups:{}};let currentWineId=null;let currentTankId=null;let currentStockId=null;let selectedSaleId='';let currentQrUrl='';let currentStockQrUrl='';let targetQrScanner=null;let qrMediaStream=null;let qrScanRaf=null;let qrScanning=false;let qrLastFrameAt=0;let qrSelectionMode='transferTarget';let transferContextTankId='';let procedureContextTankId='';let pendingSaleWineId='';let pendingStockId='';let GOOGLE_ACCESS_TOKEN='';let GOOGLE_TOKEN_EXPIRES_AT=0;let GOOGLE_TOKEN_CLIENT=null;let CURRENT_GOOGLE_EMAIL='';const URL_PARAMS=new URLSearchParams(location.search);const INITIAL_TANK=URL_PARAMS.get('cisterna')||'';const INITIAL_STOCK=URL_PARAMS.get('zaloga')||'';const TITLES={home:'Kletarska evidenca',klet:'🏠 Klet',calculations:'🧮 Izračuni',calcalk:'🍷 Izračun ALK',calcsugar:'🍬 Izračun sladkorja',calcso2:'🧪 Izračun SO₂',wines:'🍷 Vina',procedure:'➕ Nov postopek',analysis:'🧪 Analiza',costs:'💳 Stroški',bottling:'🍾 Stekleničenje',sale:'💶 Prodaja',warehouse:'📦 Skladišče','warehouse-tanks':'🛢️ Zaloga v cisternah','warehouse-bottles':'🍾 Zaloga v steklenicah','warehouse-grapes':'🍇 Nakup grozdja',transfer:'🔄 Pretok',tanks:'🛢️ Cisterne'};let CURRENT_SCREEN='home';let SCREEN_HISTORY=[];
 document.addEventListener('DOMContentLoaded',initStandaloneApp);
 function setLoading(v){document.getElementById('loader').classList.toggle('show',v)}
 function toast(msg){const t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');clearTimeout(window._tt);window._tt=setTimeout(()=>t.classList.remove('show'),3000)}
@@ -1411,9 +1436,13 @@ function showScreen(name,btn,fromBack=false){
 
   document.querySelectorAll('.nav button').forEach(x=>x.classList.remove('active'));
   let navName=name;
-  if(name==='wines'||name==='tanks')navName='klet';if(name==='warehouse-tanks'||name==='warehouse-bottles'||name==='warehouse-grapes')navName='warehouse';
-  const navBtn=btn||document.querySelector(`.nav button[data-screen="${navName}"]`);
-  if(navBtn)navBtn.classList.add('active');
+  if(name==='wines'||name==='tanks'||name==='calculations'||name==='calcalk'||name==='calcsugar'||name==='calcso2')navName='klet';
+  if(name==='warehouse-tanks'||name==='warehouse-bottles'||name==='warehouse-grapes')navName='warehouse';
+
+  if(name!=='home'){
+    const navBtn=btn||document.querySelector(`.nav button[data-screen="${navName}"]`);
+    if(navBtn)navBtn.classList.add('active');
+  }
 
   CURRENT_SCREEN=name;
   document.getElementById('screenTitle').textContent=TITLES[name]||'Kletarska evidenca';
@@ -1428,7 +1457,7 @@ function goBack(){
       prev=candidate;
     }
   }
-  showScreen(prev||'klet',null,true);
+  showScreen(prev||'home',null,true);
 }
 function fillSelect(el,items,valueKey,labelFn,includeBlank=true){const old=el.value;el.innerHTML=includeBlank?'<option value="">— izberi —</option>':'';(items||[]).forEach(item=>{const o=document.createElement('option');o.value=valueKey?item[valueKey]:item;o.textContent=labelFn?labelFn(item):item;el.appendChild(o)});if([...el.options].some(o=>o.value===old))el.value=old}
 function wineLabel(w){return `${w.Letnik||''} – ${w.Naziv_vina||w.ID_vina}${w.Trenutna_cisterna?' – '+tankName(w.Trenutna_cisterna):''}`}
