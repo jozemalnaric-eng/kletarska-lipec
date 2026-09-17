@@ -422,7 +422,7 @@
     <div id="authError" class="auth-error"></div>
   </div>
 </div>
-<header class="topbar"><h1 id="screenTitle">Kletarska evidenca</h1><div class="sub">Kletarska evidenca - Vinska klet Lipec · v65</div>
+<header class="topbar"><h1 id="screenTitle">Kletarska evidenca</h1><div class="sub">Kletarska evidenca - Vinska klet Lipec · v66</div>
     <button class="app-close-btn" type="button" aria-label="Zapri aplikacijo" onclick="closeLipecApp()">×</button></header>
 <main>
 <section id="screen-home" class="screen active">
@@ -686,7 +686,7 @@
   </section>
 
   <section id="screen-transfer" class="screen"><div class="form-card"><form id="transferForm" onsubmit="submitTransfer(event)">
-    <div class="notice">Če prestavljaš <b>celotno serijo vina</b>, označi »Celoten pretok«. Aplikacija bo nato posodobila trenutno cisterno vina.</div>
+    <div class="notice">Če prestavljaš <b>celotno serijo vina</b>, označi »Celoten pretok«. Dovoljen je tudi pretok <b>iz iste cisterne nazaj v isto cisterno</b>; v tem primeru se od stanja odšteje samo vpisana izguba.</div>
     <label>Datum</label><input type="date" name="Datum" required>
     <label>Vino v cisterni</label><select name="ID_vina" id="transferWineSelect" class="wine-select" required></select>
     <div id="transferTankContext" class="notice" style="display:none"></div>
@@ -2135,13 +2135,26 @@ function renderTankStockSummary(){
   const box=document.getElementById('tankStockSummary');
   if(!box)return;
 
-  const rows=(DATA.tankBalances||[])
+  let rows=(DATA.tankBalances||[])
     .filter(b=>num(b.Kolicina_L)>0.0001)
     .map(b=>{
       const w=(DATA.wines||[]).find(x=>String(x.ID_vina)===String(b.ID_vina));
       return w?{...b,wine:w}:null;
     })
     .filter(Boolean);
+
+  // Če je nova tabela STANJE_CISTERN še prazna, ne pokaži napačnih 0 L.
+  // Do backend migracije uporabi obstoječe stanje iz registra VINA.
+  if(!rows.length){
+    rows=(DATA.wines||[])
+      .filter(w=>String(w.Trenutna_cisterna||'').trim()!=='' && num(w.Trenutna_kolicina_L)>0.0001)
+      .map(w=>({
+        ID_vina:w.ID_vina,
+        ID_cisterne:w.Trenutna_cisterna,
+        Kolicina_L:num(w.Trenutna_kolicina_L),
+        wine:w
+      }));
+  }
 
   const total=rows.reduce((sum,r)=>sum+num(r.Kolicina_L),0);
 
@@ -2155,20 +2168,25 @@ function renderTankStockSummary(){
 
   const body=rows
     .sort((a,b)=>String(a.wine.Naziv_vina||'').localeCompare(String(b.wine.Naziv_vina||''),'sl'))
-    .map(r=>`<div class="tank-stock-row">
-      <div>
-        <div class="tank-stock-name">${escapeHtml(r.wine.Naziv_vina||r.wine.ID_vina)}</div>
-        <div class="tank-stock-meta">${escapeHtml(tankName(r.ID_cisterne)||r.ID_cisterne)}</div>
-      </div>
-      <div class="tank-stock-qty">${fmt(r.Kolicina_L)} L</div>
-    </div>`).join('');
+    .map(r=>{
+      const tank=(DATA.tanks||[]).find(t=>String(t.ID_cisterne)===String(r.ID_cisterne));
+      const tankText=tank
+        ? `${tank.ID_cisterne||r.ID_cisterne} · ${fmt(tank.Prostornina_L)} L`
+        : r.ID_cisterne;
+      return `<div class="tank-stock-row">
+        <div>
+          <div class="tank-stock-name">${escapeHtml(r.wine.Naziv_vina||r.wine.ID_vina)}</div>
+          <div class="tank-stock-meta">${escapeHtml(tankText)}</div>
+        </div>
+        <div class="tank-stock-qty">${fmt(r.Kolicina_L)} L</div>
+      </div>`;
+    }).join('');
 
   box.innerHTML=`<div class="tank-stock-summary">
     <div class="tank-stock-total">🛢️ Skupaj v cisternah: ${fmt(total)} L</div>
     ${body}
   </div>`;
 }
-
 function costDateValue(c){
   return String(c.Datum||'');
 }
@@ -2332,7 +2350,13 @@ function openTank(id,fromQr=false){
   }
 
   currentTankId=id;
-  const occupants=tankOccupantsWithQty(id);
+  let occupants=tankOccupantsWithQty(id);
+  if(!occupants.length){
+    const legacy=(DATA.wines||[]).filter(w=>
+      String(w.Trenutna_cisterna||'')===String(id) && num(w.Trenutna_kolicina_L)>0
+    );
+    occupants=legacy;
+  }
   const used=occupants.reduce((s,w)=>s+num(w.Trenutna_kolicina_L),0);
 
   document.getElementById('tankDetailTitle').textContent=
@@ -2366,7 +2390,15 @@ function closeTankModal(){
 }
 
 function tankOccupant(id){
-  return tankOccupantsWithQty(id)[0]||null;
+  const fromBalances=tankOccupantsWithQty(id)[0];
+  if(fromBalances)return fromBalances;
+
+  // Združljivost s starejšimi podatki: če STANJE_CISTERN še ni bilo migrirano,
+  // uporabi trenutno cisterno in količino iz registra VINA.
+  const w=(DATA.wines||[]).find(x=>
+    String(x.Trenutna_cisterna||'')===String(id) && num(x.Trenutna_kolicina_L)>0
+  );
+  return w||null;
 }
 
 
@@ -2530,10 +2562,6 @@ function acceptTargetTankFromQr(text){
   }
 
   const from=document.getElementById('transferFrom').value||transferContextTankId;
-  if(String(id)===String(from)){
-    toast('Ciljna cisterna ne sme biti ista kot izvorna cisterna.');
-    return false;
-  }
 
   document.getElementById('transferTo').value=id;
   toast('Izbrana ciljna cisterna: '+(t.Naziv||id));
@@ -2979,14 +3007,14 @@ function quickForTankProcedure(){
   const w=tankOccupant(id);
   closeTankModal();
   showScreen('procedure');
-  setProcedureContext(id,w);
+  setTimeout(()=>setProcedureContext(id,w),0);
 }
 function quickForTankTransfer(){
   const id=currentTankId;
   const w=tankOccupant(id);
   closeTankModal();
   showScreen('transfer');
-  setTransferContext(id,w);
+  setTimeout(()=>setTransferContext(id,w),0);
 }
 function tankQrUrl(id){const base=DATA.webAppUrl||'';if(!base)return'';return base+(base.includes('?')?'&':'?')+'cisterna='+encodeURIComponent(id)}
 function showTankQr(id){currentTankId=id;const t=DATA.tanks.find(x=>String(x.ID_cisterne)===String(id));if(!t)return;currentQrUrl=tankQrUrl(id);document.getElementById('qrTitle').textContent=`QR – ${t.Naziv||id}`;document.getElementById('qrLink').textContent=currentQrUrl||'Web app URL ni na voljo. Preveri, ali je aplikacija objavljena kot Web app.';const box=document.getElementById('qrCode');box.innerHTML='';if(currentQrUrl&&typeof QRCode!=='undefined'){new QRCode(box,{text:currentQrUrl,width:230,height:230,colorDark:'#000000',colorLight:'#ffffff',correctLevel:QRCode.CorrectLevel.M})}document.getElementById('qrModal').classList.add('show')}
