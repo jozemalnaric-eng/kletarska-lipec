@@ -404,6 +404,15 @@
       transform:none !important;
       text-align:left !important;
     }
+
+    .customer-sale-box{
+      margin-top:12px;
+      padding:12px;
+      border:1px solid var(--line);
+      border-radius:14px;
+      background:#f8faf8;
+    }
+    .customer-card .title{font-size:16px}
 </style>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
   <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
@@ -422,7 +431,7 @@
     <div id="authError" class="auth-error"></div>
   </div>
 </div>
-<header class="topbar"><h1 id="screenTitle">Kletarska evidenca</h1><div class="sub">Kletarska evidenca - Vinska klet Lipec · v66</div>
+<header class="topbar"><h1 id="screenTitle">Kletarska evidenca</h1><div class="sub">Kletarska evidenca - Vinska klet Lipec · v67</div>
     <button class="app-close-btn" type="button" aria-label="Zapri aplikacijo" onclick="closeLipecApp()">×</button></header>
 <main>
 <section id="screen-home" class="screen active">
@@ -751,7 +760,10 @@
   <div id="saleChoice">
     <div class="row" style="margin-top:4px;align-items:center">
       <div class="section-title" style="margin:0">Izberi vrsto</div>
-      <button class="btn btn-soft btn-small" type="button" onclick="openSalesPrint()">📄 Pregled računov</button>
+      <div class="row" style="gap:6px">
+        <button class="btn btn-soft btn-small" type="button" onclick="openCustomerRegister()">👥 Kupci</button>
+        <button class="btn btn-soft btn-small" type="button" onclick="openSalesPrint()">📄 Pregled računov</button>
+      </div>
     </div>
     <div class="sale-choice" style="margin-top:10px">
       <button class="choice" type="button" onclick="openSaleMode('dispatch')">
@@ -788,11 +800,27 @@
           <div><label>Cena / L (€)</label><input inputmode="decimal" name="Cena_enota_EUR" oninput="calcDispatchSale()"></div>
           <div><label>Cena skupaj (€)</label><input inputmode="decimal" name="Cena_skupaj_EUR"></div>
         </div>
-        <label>Kupec / naročnik</label><input name="Kupec" placeholder="ime ali podjetje">
-        <label>Naslov kupca</label><input name="Kupec_naslov" placeholder="ulica in hišna številka">
-        <div class="two">
-          <div><label>Pošta / kraj</label><input name="Kupec_posta" placeholder="8333 Semič"></div>
-          <div><label>Davčna št. kupca</label><input name="Kupec_davcna" placeholder="SI ..."></div>
+        <div class="customer-sale-box">
+          <div class="row" style="align-items:end">
+            <div style="flex:1">
+              <label>Izberi kupca iz registra</label>
+              <select name="ID_kupca" class="customer-select" onchange="selectCustomerForSale(this.form,this.value)">
+                <option value="">— nov / brez registriranega kupca —</option>
+              </select>
+            </div>
+            <button class="btn btn-soft btn-small" type="button" onclick="openNewCustomerForSale(this.form)">+ Nov kupec</button>
+          </div>
+
+          <label>Kupec / naročnik</label><input name="Kupec" placeholder="ime ali podjetje">
+          <label>Naslov kupca</label><input name="Kupec_naslov" placeholder="ulica in hišna številka">
+          <div class="two">
+            <div><label>Pošta / kraj</label><input name="Kupec_posta" placeholder="8333 Semič"></div>
+            <div><label>Davčna št. kupca</label><input name="Kupec_davcna" placeholder="SI ..."></div>
+          </div>
+          <div class="two">
+            <div><label>E-pošta kupca</label><input type="email" name="Kupec_email" placeholder="kupec@primer.si"></div>
+            <div><label>Telefon</label><input name="Kupec_telefon" placeholder="040 ..."></div>
+          </div>
         </div>
         <label>Način plačila</label>
         <select name="Nacin_placila">
@@ -837,11 +865,27 @@
           <div><label>Cena skupaj (€)</label><input inputmode="decimal" name="Cena_skupaj_EUR"></div>
         </div>
 
-        <label>Kupec / naročnik</label><input name="Kupec" placeholder="ime ali podjetje">
-        <label>Naslov kupca</label><input name="Kupec_naslov" placeholder="ulica in hišna številka">
-        <div class="two">
-          <div><label>Pošta / kraj</label><input name="Kupec_posta" placeholder="8333 Semič"></div>
-          <div><label>Davčna št. kupca</label><input name="Kupec_davcna" placeholder="SI ..."></div>
+        <div class="customer-sale-box">
+          <div class="row" style="align-items:end">
+            <div style="flex:1">
+              <label>Izberi kupca iz registra</label>
+              <select name="ID_kupca" class="customer-select" onchange="selectCustomerForSale(this.form,this.value)">
+                <option value="">— nov / brez registriranega kupca —</option>
+              </select>
+            </div>
+            <button class="btn btn-soft btn-small" type="button" onclick="openNewCustomerForSale(this.form)">+ Nov kupec</button>
+          </div>
+
+          <label>Kupec / naročnik</label><input name="Kupec" placeholder="ime ali podjetje">
+          <label>Naslov kupca</label><input name="Kupec_naslov" placeholder="ulica in hišna številka">
+          <div class="two">
+            <div><label>Pošta / kraj</label><input name="Kupec_posta" placeholder="8333 Semič"></div>
+            <div><label>Davčna št. kupca</label><input name="Kupec_davcna" placeholder="SI ..."></div>
+          </div>
+          <div class="two">
+            <div><label>E-pošta kupca</label><input type="email" name="Kupec_email" placeholder="kupec@primer.si"></div>
+            <div><label>Telefon</label><input name="Kupec_telefon" placeholder="040 ..."></div>
+          </div>
         </div>
         <label>Način plačila</label>
         <select name="Nacin_placila">
@@ -1045,6 +1089,61 @@
             onclick="closeTargetQrScanner()">
       Prekliči
     </button>
+  </div>
+</div>
+
+
+<div id="customerRegisterModal" class="modal" onclick="if(event.target===this)closeCustomerRegister()">
+  <div class="sheet">
+    <div class="sheet-head row">
+      <div>
+        <div class="title">👥 Register kupcev</div>
+        <div class="meta">Kupci, naročniki in podatki za račune</div>
+      </div>
+      <button class="close" type="button" onclick="closeCustomerRegister()">×</button>
+    </div>
+
+    <button class="btn btn-primary" type="button" onclick="openCustomerEdit()">+ Nov kupec</button>
+    <div id="customerRegisterList" class="grid" style="margin-top:12px"></div>
+  </div>
+</div>
+
+<div id="customerEditModal" class="modal" onclick="if(event.target===this)closeCustomerEdit()">
+  <div class="sheet">
+    <div class="sheet-head row">
+      <div>
+        <div class="title" id="customerEditTitle">👤 Nov kupec</div>
+        <div class="meta">Podatki se shranijo v register KUPCI</div>
+      </div>
+      <button class="close" type="button" onclick="closeCustomerEdit()">×</button>
+    </div>
+
+    <form id="customerEditForm" onsubmit="submitCustomer(event)">
+      <input type="hidden" name="ID_kupca">
+      <input type="hidden" name="Return_form_id">
+
+      <label>Ime / naziv kupca</label>
+      <input name="Naziv" required placeholder="ime in priimek ali podjetje">
+
+      <label>Naslov</label>
+      <input name="Naslov" placeholder="ulica in hišna številka">
+
+      <label>Pošta / kraj</label>
+      <input name="Posta" placeholder="8333 Semič">
+
+      <div class="two">
+        <div><label>Davčna številka</label><input name="Davcna" placeholder="SI ..."></div>
+        <div><label>Telefon</label><input name="Telefon" placeholder="040 ..."></div>
+      </div>
+
+      <label>E-pošta</label>
+      <input type="email" name="Email" placeholder="kupec@primer.si">
+
+      <label>Opomba</label>
+      <textarea name="Opomba"></textarea>
+
+      <button class="btn btn-primary" type="submit">Shrani kupca</button>
+    </form>
   </div>
 </div>
 
@@ -1331,7 +1430,7 @@
   <div class="two"><div><label>Začetni °Oe</label><input inputmode="decimal" name="Zacetni_Oe"></div><div><label>Ciljni sladkor (g/L)</label><input inputmode="decimal" name="Ciljni_sladkor_gL"></div></div><label>Opomba</label><textarea name="Opomba"></textarea><button class="btn btn-primary" type="submit">Shrani vino</button>
 </form></div></div>
 <script>
-let DATA={wines:[],tanks:[],tankBalances:[],warehouse:[],sales:[],grapePurchases:[],grapeOrigins:[],grapeSuppliers:[],lookups:{}};let currentWineId=null;let currentTankId=null;let currentStockId=null;let selectedSaleId='';let currentQrUrl='';let currentStockQrUrl='';let targetQrScanner=null;let qrMediaStream=null;let qrScanRaf=null;let qrScanning=false;let qrLastFrameAt=0;let qrSelectionMode='transferTarget';let transferContextTankId='';let procedureContextTankId='';let pendingSaleWineId='';let pendingStockId='';let GOOGLE_ACCESS_TOKEN='';let GOOGLE_TOKEN_EXPIRES_AT=0;let GOOGLE_TOKEN_CLIENT=null;let CURRENT_GOOGLE_EMAIL='';const URL_PARAMS=new URLSearchParams(location.search);const INITIAL_TANK=URL_PARAMS.get('cisterna')||'';const INITIAL_STOCK=URL_PARAMS.get('zaloga')||'';const TITLES={home:'Kletarska evidenca',klet:'🏠 Klet',calculations:'🧮 Izračuni',calcalk:'🍷 Izračun ALK',calcsugar:'🍬 Izračun sladkorja',calcso2:'🧪 Izračun SO₂',wines:'🍷 Vina',procedure:'➕ Nov postopek',analysis:'🧪 Analiza',costs:'💳 Stroški',bottling:'🍾 Stekleničenje',sale:'💶 Prodaja',warehouse:'📦 Skladišče','warehouse-tanks':'🛢️ Zaloga v cisternah','warehouse-bottles':'🍾 Zaloga v steklenicah','warehouse-grapes':'🍇 Nakup grozdja',transfer:'🔄 Pretok',tanks:'🛢️ Cisterne'};let CURRENT_SCREEN='home';let SCREEN_HISTORY=[];
+let DATA={wines:[],tanks:[],tankBalances:[],warehouse:[],sales:[],customers:[],grapePurchases:[],grapeOrigins:[],grapeSuppliers:[],lookups:{}};let currentWineId=null;let currentTankId=null;let currentStockId=null;let selectedSaleId='';let currentQrUrl='';let currentStockQrUrl='';let targetQrScanner=null;let qrMediaStream=null;let qrScanRaf=null;let qrScanning=false;let qrLastFrameAt=0;let qrSelectionMode='transferTarget';let transferContextTankId='';let procedureContextTankId='';let pendingSaleWineId='';let pendingStockId='';let GOOGLE_ACCESS_TOKEN='';let GOOGLE_TOKEN_EXPIRES_AT=0;let GOOGLE_TOKEN_CLIENT=null;let CURRENT_GOOGLE_EMAIL='';const URL_PARAMS=new URLSearchParams(location.search);const INITIAL_TANK=URL_PARAMS.get('cisterna')||'';const INITIAL_STOCK=URL_PARAMS.get('zaloga')||'';const TITLES={home:'Kletarska evidenca',klet:'🏠 Klet',calculations:'🧮 Izračuni',calcalk:'🍷 Izračun ALK',calcsugar:'🍬 Izračun sladkorja',calcso2:'🧪 Izračun SO₂',wines:'🍷 Vina',procedure:'➕ Nov postopek',analysis:'🧪 Analiza',costs:'💳 Stroški',bottling:'🍾 Stekleničenje',sale:'💶 Prodaja',warehouse:'📦 Skladišče','warehouse-tanks':'🛢️ Zaloga v cisternah','warehouse-bottles':'🍾 Zaloga v steklenicah','warehouse-grapes':'🍇 Nakup grozdja',transfer:'🔄 Pretok',tanks:'🛢️ Cisterne'};let CURRENT_SCREEN='home';let SCREEN_HISTORY=[];
 document.addEventListener('DOMContentLoaded',initStandaloneApp);
 function setLoading(v){document.getElementById('loader').classList.toggle('show',v)}
 function toast(msg){const t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');clearTimeout(window._tt);window._tt=setTimeout(()=>t.classList.remove('show'),3000)}
@@ -1475,7 +1574,165 @@ function goBack(){
 function fillSelect(el,items,valueKey,labelFn,includeBlank=true){const old=el.value;el.innerHTML=includeBlank?'<option value="">— izberi —</option>':'';(items||[]).forEach(item=>{const o=document.createElement('option');o.value=valueKey?item[valueKey]:item;o.textContent=labelFn?labelFn(item):item;el.appendChild(o)});if([...el.options].some(o=>o.value===old))el.value=old}
 function wineLabel(w){return `${w.Letnik||''} – ${w.Naziv_vina||w.ID_vina}${w.Trenutna_cisterna?' – '+tankName(w.Trenutna_cisterna):''}`}
 function tankName(id){const t=DATA.tanks.find(x=>String(x.ID_cisterne)===String(id));return t?(t.Naziv||id):id}
-function fillAll(){document.querySelectorAll('.wine-select').forEach(el=>fillSelect(el,DATA.wines,'ID_vina',wineLabel));document.querySelectorAll('.tank-select').forEach(el=>fillSelect(el,DATA.tanks,'ID_cisterne',t=>`${t.Naziv||t.ID_cisterne} (${t.Prostornina_L||'?'} L)`));document.querySelectorAll('.warehouse-select').forEach(el=>fillSelect(el,activeWarehouseItems(),'ID_zaloge',stockLabel));const procList=[...(DATA.lookups.procedures||[])].filter(x=>!String(x).toLowerCase().includes('steklenič')&&!String(x).toLowerCase().includes('steklenic')&&!String(x).toLowerCase().includes('polnitev'));
+
+let CUSTOMER_RETURN_FORM_ID='';
+
+function customerLabel(c){
+  const parts=[c.Naziv||c.ID_kupca];
+  if(c.Posta)parts.push(c.Posta);
+  if(c.Davcna)parts.push(c.Davcna);
+  return parts.join(' · ');
+}
+
+function fillCustomerSelect(el){
+  if(!el)return;
+  const old=el.value;
+  el.innerHTML='<option value="">— nov / brez registriranega kupca —</option>'+
+    (DATA.customers||[]).map(c=>
+      `<option value="${escapeHtml(c.ID_kupca)}">${escapeHtml(customerLabel(c))}</option>`
+    ).join('');
+  if([...el.options].some(o=>String(o.value)===String(old)))el.value=old;
+}
+
+function selectCustomerForSale(form,id){
+  if(!form)return;
+
+  const c=(DATA.customers||[]).find(x=>String(x.ID_kupca)===String(id));
+  if(!c){
+    if(!id){
+      ['Kupec','Kupec_naslov','Kupec_posta','Kupec_davcna','Kupec_email','Kupec_telefon']
+        .forEach(name=>{
+          const el=form.querySelector(`[name="${name}"]`);
+          if(el)el.value='';
+        });
+    }
+    return;
+  }
+
+  const map={
+    Kupec:c.Naziv||'',
+    Kupec_naslov:c.Naslov||'',
+    Kupec_posta:c.Posta||'',
+    Kupec_davcna:c.Davcna||'',
+    Kupec_email:c.Email||'',
+    Kupec_telefon:c.Telefon||''
+  };
+
+  Object.entries(map).forEach(([name,value])=>{
+    const el=form.querySelector(`[name="${name}"]`);
+    if(el)el.value=value;
+  });
+}
+
+function renderCustomerRegister(){
+  const el=document.getElementById('customerRegisterList');
+  if(!el)return;
+
+  const items=DATA.customers||[];
+  if(!items.length){
+    el.innerHTML='<div class="empty">V registru še ni kupcev.</div>';
+    return;
+  }
+
+  el.innerHTML=items.map(c=>`
+    <div class="card customer-card">
+      <div class="row">
+        <div>
+          <div class="title">${escapeHtml(c.Naziv||c.ID_kupca)}</div>
+          ${c.Naslov?`<div class="meta">${escapeHtml(c.Naslov)}</div>`:''}
+          ${c.Posta?`<div class="meta">${escapeHtml(c.Posta)}</div>`:''}
+          ${c.Davcna?`<div class="meta">Davčna: ${escapeHtml(c.Davcna)}</div>`:''}
+          ${c.Email?`<div class="meta">✉ ${escapeHtml(c.Email)}</div>`:''}
+          ${c.Telefon?`<div class="meta">☎ ${escapeHtml(c.Telefon)}</div>`:''}
+        </div>
+        <button class="btn btn-soft btn-small" type="button" onclick="openCustomerEdit('${escapeJs(c.ID_kupca)}')">Uredi</button>
+      </div>
+    </div>
+  `).join('');
+}
+
+function openCustomerRegister(){
+  renderCustomerRegister();
+  document.getElementById('customerRegisterModal').classList.add('show');
+}
+
+function closeCustomerRegister(){
+  document.getElementById('customerRegisterModal').classList.remove('show');
+}
+
+function openCustomerEdit(id='',returnFormId=''){
+  CUSTOMER_RETURN_FORM_ID=returnFormId||'';
+  const f=document.getElementById('customerEditForm');
+  f.reset();
+  f.querySelector('[name="Return_form_id"]').value=CUSTOMER_RETURN_FORM_ID;
+
+  const c=(DATA.customers||[]).find(x=>String(x.ID_kupca)===String(id));
+  if(c){
+    document.getElementById('customerEditTitle').textContent='👤 Uredi kupca';
+    f.querySelector('[name="ID_kupca"]').value=c.ID_kupca||'';
+    f.querySelector('[name="Naziv"]').value=c.Naziv||'';
+    f.querySelector('[name="Naslov"]').value=c.Naslov||'';
+    f.querySelector('[name="Posta"]').value=c.Posta||'';
+    f.querySelector('[name="Davcna"]').value=c.Davcna||'';
+    f.querySelector('[name="Email"]').value=c.Email||'';
+    f.querySelector('[name="Telefon"]').value=c.Telefon||'';
+    f.querySelector('[name="Opomba"]').value=c.Opomba||'';
+  }else{
+    document.getElementById('customerEditTitle').textContent='👤 Nov kupec';
+  }
+
+  document.getElementById('customerEditModal').classList.add('show');
+}
+
+function openNewCustomerForSale(form){
+  if(!form)return;
+  if(!form.id)form.id='saleFormTemp';
+  openCustomerEdit('',form.id);
+}
+
+function closeCustomerEdit(){
+  document.getElementById('customerEditModal').classList.remove('show');
+}
+
+async function submitCustomer(event){
+  event.preventDefault();
+  const f=event.target;
+  const data=formObj(f);
+  const returnFormId=data.Return_form_id||CUSTOMER_RETURN_FORM_ID||'';
+
+  try{
+    const res=await apiRun('saveCustomer',[data]);
+    if(!res||!res.item)throw new Error('Kupec ni bil vrnjen iz strežnika.');
+
+    DATA.customers=DATA.customers||[];
+    const idx=DATA.customers.findIndex(x=>String(x.ID_kupca)===String(res.item.ID_kupca));
+    if(idx>=0)DATA.customers[idx]=res.item;
+    else DATA.customers.push(res.item);
+
+    DATA.customers.sort((a,b)=>String(a.Naziv||'').localeCompare(String(b.Naziv||''),'sl'));
+
+    document.querySelectorAll('.customer-select').forEach(el=>fillCustomerSelect(el));
+    renderCustomerRegister();
+    closeCustomerEdit();
+
+    if(returnFormId){
+      const saleForm=document.getElementById(returnFormId);
+      if(saleForm){
+        const sel=saleForm.querySelector('[name="ID_kupca"]');
+        if(sel){
+          sel.value=res.item.ID_kupca||'';
+          selectCustomerForSale(saleForm,res.item.ID_kupca);
+        }
+      }
+    }
+
+    toast((res&&res.message)||'Kupec je shranjen.');
+  }catch(err){
+    fail(err);
+  }
+}
+
+function fillAll(){document.querySelectorAll('.customer-select').forEach(el=>fillCustomerSelect(el));document.querySelectorAll('.wine-select').forEach(el=>fillSelect(el,DATA.wines,'ID_vina',wineLabel));document.querySelectorAll('.tank-select').forEach(el=>fillSelect(el,DATA.tanks,'ID_cisterne',t=>`${t.Naziv||t.ID_cisterne} (${t.Prostornina_L||'?'} L)`));document.querySelectorAll('.warehouse-select').forEach(el=>fillSelect(el,activeWarehouseItems(),'ID_zaloge',stockLabel));const procList=[...(DATA.lookups.procedures||[])].filter(x=>!String(x).toLowerCase().includes('steklenič')&&!String(x).toLowerCase().includes('steklenic')&&!String(x).toLowerCase().includes('polnitev'));
   fillSelect(document.getElementById('procedureSelect'),procList);fillSelect(document.getElementById('productSelect'),DATA.lookups.products);fillSelect(document.getElementById('unitSelect'),DATA.lookups.units);fillSelect(document.getElementById('wineStatusSelect'),DATA.lookups.statuses);document.getElementById('wineNameList').innerHTML=(DATA.lookups.wineNames||[]).map(x=>`<option value="${escapeHtml(x)}"></option>`).join('');document.getElementById('originList').innerHTML=(DATA.grapeOrigins||[]).map(x=>`<option value="${escapeHtml(x)}"></option>`).join('');document.getElementById('supplierList').innerHTML=(DATA.grapeSuppliers||[]).map(x=>`<option value="${escapeHtml(x)}"></option>`).join('')}
 function setDefaults(){['procedureForm','analysisForm','bottlingForm','saleForm','dispatchSaleForm','transferForm','wineForm','grapePurchaseForm','costForm'].forEach(id=>{const f=document.getElementById(id);if(!f)return;const d=f.querySelector('[name="Datum"]')||f.querySelector('[name="Datum_sprejema"]');if(d&&!d.value)d.value=DATA.today});const tm=document.querySelector('#procedureForm [name="Cas"]');if(tm&&!tm.value)tm.value=DATA.nowTime;const atm=document.querySelector('#analysisForm [name="Cas"]');if(atm&&!atm.value)atm.value=DATA.nowTime;const y=document.querySelector('#wineForm [name="Letnik"]');if(y&&!y.value)y.value=(new Date()).getFullYear()}
 
@@ -4301,6 +4558,7 @@ function submitDispatchSale(e){
   e.preventDefault();
   callSave('saveSale',formObj(e.target),()=>{
     e.target.reset();
+    const customerSel=e.target.querySelector('[name="ID_kupca"]');if(customerSel)fillCustomerSelect(customerSel);
     const pay=e.target.querySelector('[name="Datum_placila"]');
     if(pay)pay.dataset.manual='false';
     const w=e.target.querySelector('[name="ID_vina"]');
@@ -4326,6 +4584,7 @@ function submitSale(e){
   e.preventDefault();
   callSave('saveSale',formObj(e.target),()=>{
     e.target.reset();
+    const customerSel=e.target.querySelector('[name="ID_kupca"]');if(customerSel)fillCustomerSelect(customerSel);
     const pay=e.target.querySelector('[name="Datum_placila"]');
     if(pay)pay.dataset.manual='false';
     pendingStockId='';
