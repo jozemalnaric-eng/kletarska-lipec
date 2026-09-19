@@ -431,7 +431,7 @@
     <div id="authError" class="auth-error"></div>
   </div>
 </div>
-<header class="topbar"><h1 id="screenTitle">Kletarska evidenca</h1><div class="sub">Kletarska evidenca - Vinska klet Lipec · v67</div>
+<header class="topbar"><h1 id="screenTitle">Kletarska evidenca</h1><div class="sub">Kletarska evidenca - Vinska klet Lipec · v68</div>
     <button class="app-close-btn" type="button" aria-label="Zapri aplikacijo" onclick="closeLipecApp()">×</button></header>
 <main>
 <section id="screen-home" class="screen active">
@@ -701,11 +701,12 @@
     <div id="transferTankContext" class="notice" style="display:none"></div>
     <label>Iz cisterne</label><select name="Iz_cisterne" id="transferFrom" class="tank-select" required></select>
     <div class="target-row">
-      <div><label>V cisterno</label><select name="V_cisterno" id="transferTo" class="tank-select" required></select></div>
+      <div><label>V cisterno</label><select name="V_cisterno" id="transferTo" class="tank-select" onchange="updateTransferCapacityInfo()" required></select></div>
       <button class="btn btn-soft btn-small" type="button" onclick="openTargetQrScanner()">📷 QR izbor</button>
     </div>
-    <div class="two"><div><label>Količina (L)</label><input inputmode="decimal" name="Kolicina_L" required></div><div><label>Izguba (L)</label><input inputmode="decimal" name="Izguba_L" value="0"></div></div>
-    <label>Razlog</label><input name="Razlog" placeholder="npr. pretok po bistrenju"><label>Izvajalec</label><input name="Izvajalec"><div class="switchrow"><input type="checkbox" name="Celoten_pretok" id="fullTransfer"><label for="fullTransfer" style="margin:0">Celoten pretok</label></div><label>Opomba</label><textarea name="Opomba"></textarea><button class="btn btn-primary" type="submit">Shrani pretok</button>
+    <div id="transferCapacityInfo" class="notice" style="display:none;margin-top:10px"></div>
+    <div class="two"><div><label>Količina (L)</label><input inputmode="decimal" name="Kolicina_L" oninput="updateTransferCapacityInfo()" required></div><div><label>Izguba (L)</label><input inputmode="decimal" name="Izguba_L" value="0" oninput="updateTransferCapacityInfo()"></div></div>
+    <label>Razlog</label><input name="Razlog" placeholder="npr. pretok po bistrenju"><label>Izvajalec</label><input name="Izvajalec"><div class="switchrow"><input type="checkbox" name="Celoten_pretok" id="fullTransfer" onchange="updateTransferCapacityInfo()"><label for="fullTransfer" style="margin:0">Celoten pretok</label></div><label>Opomba</label><textarea name="Opomba"></textarea><button class="btn btn-primary" type="submit">Shrani pretok</button>
   </form></div>
   <div class="screen-back-wrap"><button class="btn btn-soft screen-back-btn" type="button" onclick="goBack()">← Nazaj</button></div>
 </section>
@@ -2090,7 +2091,7 @@ function renderTanks(){
           <div class="title">${escapeHtml(t.Naziv||t.ID_cisterne)}</div>
           <div class="meta">${escapeHtml(t.Vrsta_posode||'')} · ${fmt(cap)} L</div>
         </div>
-        <div class="qty">${fmt(used)} L</div>
+        <div class="qty">${fmt(used)} / ${fmt(cap)} L${used>cap+0.0001?' ⚠️':''}</div>
       </div>
       <div class="tank-use">${
         occupants.length
@@ -2688,6 +2689,7 @@ function setProcedureContext(tankId,wine){
       ' &nbsp;·&nbsp; <b>Vino:</b> '+escapeHtml(wine.Naziv_vina||wine.ID_vina)+
       (wine.Letnik?' '+escapeHtml(wine.Letnik):'')+
       ' &nbsp;·&nbsp; <b>Količina:</b> '+fmt(wine.Trenutna_kolicina_L)+' L';
+    updateTransferCapacityInfo();
   }else{
     wineSel.value='';
     tankSel.value=tankId||'';
@@ -2709,6 +2711,82 @@ function unlockProcedureContext(){
   wineSel.classList.remove('locked-select');
   tankSel.classList.remove('locked-select');
   document.getElementById('procedureTankContext').style.display='none';
+}
+
+
+function tankCapacityInfoClient(tankId){
+  const t=(DATA.tanks||[]).find(x=>String(x.ID_cisterne)===String(tankId));
+  if(!t)return null;
+
+  const capacity=num(t.Prostornina_L);
+  const current=(DATA.tankBalances||[])
+    .filter(b=>String(b.ID_cisterne)===String(tankId))
+    .reduce((sum,b)=>sum+num(b.Kolicina_L),0);
+
+  return {
+    tank:t,
+    capacity:capacity,
+    current:current,
+    free:Math.max(0,capacity-current)
+  };
+}
+
+function updateTransferCapacityInfo(){
+  const f=document.getElementById('transferForm');
+  const box=document.getElementById('transferCapacityInfo');
+  if(!f||!box)return;
+
+  const from=f.querySelector('[name="Iz_cisterne"]')?.value||transferContextTankId||'';
+  const to=f.querySelector('[name="V_cisterno"]')?.value||'';
+  const amount=num(f.querySelector('[name="Kolicina_L"]')?.value);
+  const loss=num(f.querySelector('[name="Izguba_L"]')?.value);
+  const full=!!f.querySelector('[name="Celoten_pretok"]')?.checked;
+
+  if(!to){
+    box.style.display='none';
+    box.innerHTML='';
+    return;
+  }
+
+  const info=tankCapacityInfoClient(to);
+  if(!info||info.capacity<=0){
+    box.style.display='block';
+    box.innerHTML='<b>Za izbrano cisterno ni določene veljavne prostornine.</b>';
+    return;
+  }
+
+  if(from===to){
+    box.style.display='block';
+    box.innerHTML=
+      `<b>Pretok v isti cisterni.</b> Trenutno stanje: ${fmt(info.current)} / ${fmt(info.capacity)} L. `+
+      `Količina se ne poveča; odšteje se samo morebitna izguba.`;
+    return;
+  }
+
+  let delivered=Math.max(0,amount-loss);
+  if(full){
+    const wineId=f.querySelector('[name="ID_vina"]')?.value||'';
+    const row=(DATA.tankBalances||[]).find(b=>
+      String(b.ID_vina)===String(wineId) &&
+      String(b.ID_cisterne)===String(from)
+    );
+    const sourceQty=row?num(row.Kolicina_L):0;
+    delivered=Math.max(0,sourceQty-loss);
+  }
+
+  const projected=info.current+delivered;
+  const over=projected-info.capacity;
+
+  box.style.display='block';
+  box.innerHTML=
+    `<b>${escapeHtml(info.tank.ID_cisterne||to)}</b> · prostornina ${fmt(info.capacity)} L · `+
+    `trenutno ${fmt(info.current)} L · prosto ${fmt(info.free)} L`+
+    (delivered>0
+      ? `<br>Po pretoku: <b>${fmt(projected)} L</b>`+
+        (over>0
+          ? ` <span style="color:#a32626;font-weight:800">— PRESEŽENO ZA ${fmt(over)} L</span>`
+          : ` · ostane prosto ${fmt(Math.max(0,info.capacity-projected))} L`)
+      : '');
 }
 
 function setTransferContext(tankId,wine){
@@ -2821,6 +2899,7 @@ function acceptTargetTankFromQr(text){
   const from=document.getElementById('transferFrom').value||transferContextTankId;
 
   document.getElementById('transferTo').value=id;
+  updateTransferCapacityInfo();
   toast('Izbrana ciljna cisterna: '+(t.Naziv||id));
   return true;
 }
