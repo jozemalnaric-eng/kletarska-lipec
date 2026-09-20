@@ -431,7 +431,7 @@
     <div id="authError" class="auth-error"></div>
   </div>
 </div>
-<header class="topbar"><h1 id="screenTitle">Kletarska evidenca</h1><div class="sub">Kletarska evidenca - Vinska klet Lipec · v68</div>
+<header class="topbar"><h1 id="screenTitle">Kletarska evidenca</h1><div class="sub">Kletarska evidenca - Vinska klet Lipec · v69</div>
     <button class="app-close-btn" type="button" aria-label="Zapri aplikacijo" onclick="closeLipecApp()">×</button></header>
 <main>
 <section id="screen-home" class="screen active">
@@ -488,6 +488,11 @@
       <span class="cellar-ico">🧪</span>
       <div class="cellar-title">Izračun SO₂</div>
       <div class="cellar-meta">Prosti SO₂ → potreben dodatek 5 % H₂SO₃.</div>
+    </button>
+    <button class="cellar-choice" type="button" onclick="showScreen('firstsulfur')">
+      <span class="cellar-ico">⚗️</span>
+      <div class="cellar-title">Prvo žveplanje</div>
+      <div class="cellar-meta">Količina + pH + želeni končni prosti SO₂ → 5 % H₂SO₃.</div>
     </button>
   </div>
   <div class="screen-back-wrap">
@@ -591,6 +596,45 @@
       Tabela neposredno podpira cilje približno <b>25, 35, 40, 45 in 50 mg/L</b>. Za vmesne cilje aplikacija linearno interpolira med tabelaričnimi vrednostmi.
     </div>
   </div>
+  <div class="screen-back-wrap">
+    <button class="btn btn-soft screen-back-btn" type="button" onclick="goBack()">← Nazaj</button>
+  </div>
+</section>
+
+<section id="screen-firstsulfur" class="screen">
+  <div class="form-card">
+    <div class="section-title">⚗️ Prvo žveplanje</div>
+    <div class="notice" style="margin-bottom:12px">
+      Izračun je namenjen <b>prvemu žveplanju po alkoholni fermentaciji</b>.
+      Pri prvem dodatku se del SO₂ veže, zato je začetni odmerek višji od želenega končnega prostega SO₂.
+    </div>
+
+    <label>Količina vina (L)</label>
+    <input id="firstSulfurVolume" inputmode="decimal" placeholder="npr. 1000" oninput="calculateFirstSulfur()">
+
+    <div class="two" style="margin-top:12px">
+      <div>
+        <label>pH vina</label>
+        <input id="firstSulfurPh" inputmode="decimal" placeholder="npr. 3,18" oninput="calculateFirstSulfur()">
+      </div>
+      <div>
+        <label>Želeni končni prosti SO₂ (mg/L)</label>
+        <input id="firstSulfurTarget" inputmode="decimal" placeholder="npr. 40" oninput="calculateFirstSulfur()">
+      </div>
+    </div>
+
+    <div id="firstSulfurResult" class="calc-result-box" style="margin-top:14px">
+      Vnesi količino vina, pH in želeni končni prosti SO₂.
+    </div>
+
+    <div class="notice" style="margin-top:14px;font-size:12px">
+      Osnova: 5 % H₂SO₃ vsebuje približno 50 mg SO₂/mL.
+      Pri prvem žveplanju je uporabljena orientacijska rezerva zaradi vezave:
+      začetni vnos ≈ <b>1,5 × želeni končni prosti SO₂</b>.
+      Po približno enem tednu je priporočljiva kontrolna meritev prostega SO₂.
+    </div>
+  </div>
+
   <div class="screen-back-wrap">
     <button class="btn btn-soft screen-back-btn" type="button" onclick="goBack()">← Nazaj</button>
   </div>
@@ -1431,7 +1475,7 @@
   <div class="two"><div><label>Začetni °Oe</label><input inputmode="decimal" name="Zacetni_Oe"></div><div><label>Ciljni sladkor (g/L)</label><input inputmode="decimal" name="Ciljni_sladkor_gL"></div></div><label>Opomba</label><textarea name="Opomba"></textarea><button class="btn btn-primary" type="submit">Shrani vino</button>
 </form></div></div>
 <script>
-let DATA={wines:[],tanks:[],tankBalances:[],warehouse:[],sales:[],customers:[],grapePurchases:[],grapeOrigins:[],grapeSuppliers:[],lookups:{}};let currentWineId=null;let currentTankId=null;let currentStockId=null;let selectedSaleId='';let currentQrUrl='';let currentStockQrUrl='';let targetQrScanner=null;let qrMediaStream=null;let qrScanRaf=null;let qrScanning=false;let qrLastFrameAt=0;let qrSelectionMode='transferTarget';let transferContextTankId='';let procedureContextTankId='';let pendingSaleWineId='';let pendingStockId='';let GOOGLE_ACCESS_TOKEN='';let GOOGLE_TOKEN_EXPIRES_AT=0;let GOOGLE_TOKEN_CLIENT=null;let CURRENT_GOOGLE_EMAIL='';const URL_PARAMS=new URLSearchParams(location.search);const INITIAL_TANK=URL_PARAMS.get('cisterna')||'';const INITIAL_STOCK=URL_PARAMS.get('zaloga')||'';const TITLES={home:'Kletarska evidenca',klet:'🏠 Klet',calculations:'🧮 Izračuni',calcalk:'🍷 Izračun ALK',calcsugar:'🍬 Izračun sladkorja',calcso2:'🧪 Izračun SO₂',wines:'🍷 Vina',procedure:'➕ Nov postopek',analysis:'🧪 Analiza',costs:'💳 Stroški',bottling:'🍾 Stekleničenje',sale:'💶 Prodaja',warehouse:'📦 Skladišče','warehouse-tanks':'🛢️ Zaloga v cisternah','warehouse-bottles':'🍾 Zaloga v steklenicah','warehouse-grapes':'🍇 Nakup grozdja',transfer:'🔄 Pretok',tanks:'🛢️ Cisterne'};let CURRENT_SCREEN='home';let SCREEN_HISTORY=[];
+let DATA={wines:[],tanks:[],tankBalances:[],warehouse:[],sales:[],customers:[],grapePurchases:[],grapeOrigins:[],grapeSuppliers:[],lookups:{}};let currentWineId=null;let currentTankId=null;let currentStockId=null;let selectedSaleId='';let currentQrUrl='';let currentStockQrUrl='';let targetQrScanner=null;let qrMediaStream=null;let qrScanRaf=null;let qrScanning=false;let qrLastFrameAt=0;let qrSelectionMode='transferTarget';let transferContextTankId='';let procedureContextTankId='';let pendingSaleWineId='';let pendingStockId='';let GOOGLE_ACCESS_TOKEN='';let GOOGLE_TOKEN_EXPIRES_AT=0;let GOOGLE_TOKEN_CLIENT=null;let CURRENT_GOOGLE_EMAIL='';const URL_PARAMS=new URLSearchParams(location.search);const INITIAL_TANK=URL_PARAMS.get('cisterna')||'';const INITIAL_STOCK=URL_PARAMS.get('zaloga')||'';const TITLES={home:'Kletarska evidenca',klet:'🏠 Klet',calculations:'🧮 Izračuni',calcalk:'🍷 Izračun ALK',calcsugar:'🍬 Izračun sladkorja',calcso2:'🧪 Izračun SO₂',firstsulfur:'⚗️ Prvo žveplanje',wines:'🍷 Vina',procedure:'➕ Nov postopek',analysis:'🧪 Analiza',costs:'💳 Stroški',bottling:'🍾 Stekleničenje',sale:'💶 Prodaja',warehouse:'📦 Skladišče','warehouse-tanks':'🛢️ Zaloga v cisternah','warehouse-bottles':'🍾 Zaloga v steklenicah','warehouse-grapes':'🍇 Nakup grozdja',transfer:'🔄 Pretok',tanks:'🛢️ Cisterne'};let CURRENT_SCREEN='home';let SCREEN_HISTORY=[];
 document.addEventListener('DOMContentLoaded',initStandaloneApp);
 function setLoading(v){document.getElementById('loader').classList.toggle('show',v)}
 function toast(msg){const t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');clearTimeout(window._tt);window._tt=setTimeout(()=>t.classList.remove('show'),3000)}
@@ -1549,7 +1593,7 @@ function showScreen(name,btn,fromBack=false){
 
   document.querySelectorAll('.nav button').forEach(x=>x.classList.remove('active'));
   let navName=name;
-  if(name==='wines'||name==='tanks'||name==='calculations'||name==='calcalk'||name==='calcsugar'||name==='calcso2')navName='klet';
+  if(name==='wines'||name==='tanks'||name==='calculations'||name==='calcalk'||name==='calcsugar'||name==='calcso2'||name==='firstsulfur')navName='klet';
   if(name==='warehouse-tanks'||name==='warehouse-bottles'||name==='warehouse-grapes')navName='warehouse';
 
   if(name!=='home'){
@@ -5152,6 +5196,72 @@ function calculateSo2Addition(){
     <div><b>Preračunani odmerek SO₂:</b> ${fmt(eqSo2)} mg/L</div>
     <div class="calc-main-result"><b>Dodaj skupaj:</b> ${fmt(totalMl)} mL 5 % H₂SO₃</div>
     <div style="font-size:12px;margin-top:6px">≈ <b>${fmt(totalDl)} dL</b>${totalL>=1?` oziroma <b>${fmt(totalL)} L</b>`:''}</div>
+  `;
+}
+
+const FIRST_SULFUR_PH_TABLE=[
+  [2.90,11],[3.00,13],[3.10,16],[3.20,21],[3.30,26],
+  [3.40,32],[3.50,40],[3.60,50],[3.70,63],[3.80,79]
+];
+
+function firstSulfurMinimumFreeSo2(ph){
+  const x=Number(String(ph??'').replace(',','.'));
+  if(!Number.isFinite(x))return null;
+  const t=FIRST_SULFUR_PH_TABLE;
+  if(x<t[0][0]||x>t[t.length-1][0])return null;
+  for(let i=0;i<t.length;i++){
+    if(Math.abs(x-t[i][0])<0.000001)return t[i][1];
+    if(i<t.length-1&&x>t[i][0]&&x<t[i+1][0]){
+      const a=t[i],b=t[i+1];
+      const f=(x-a[0])/(b[0]-a[0]);
+      return a[1]+f*(b[1]-a[1]);
+    }
+  }
+  return null;
+}
+
+function calculateFirstSulfur(){
+  const volume=Number(String(document.getElementById('firstSulfurVolume')?.value||'').replace(',','.'));
+  const ph=Number(String(document.getElementById('firstSulfurPh')?.value||'').replace(',','.'));
+  const target=Number(String(document.getElementById('firstSulfurTarget')?.value||'').replace(',','.'));
+  const box=document.getElementById('firstSulfurResult');
+  if(!box)return;
+
+  if(!Number.isFinite(volume)||!Number.isFinite(ph)||!Number.isFinite(target)){
+    box.innerHTML='Vnesi količino vina, pH in želeni končni prosti SO₂.';
+    return;
+  }
+  if(volume<=0){box.innerHTML='<b>Količina vina mora biti večja od 0 L.</b>';return;}
+  if(ph<2.8||ph>4.2){box.innerHTML='<b>Preveri pH.</b> Vnesena vrednost ni običajna za vino.';return;}
+  if(target<=0){box.innerHTML='<b>Želeni končni prosti SO₂ mora biti večji od 0 mg/L.</b>';return;}
+
+  const minFree=firstSulfurMinimumFreeSo2(ph);
+  const initialSo2MgL=target*1.5;
+  const totalMl=(initialSo2MgL*volume)/50;
+  const mlPer100L=totalMl/(volume/100);
+  const totalDl=totalMl/100;
+  const totalL=totalMl/1000;
+
+  const phInfo=minFree!==null
+    ? `<div><b>Priporočeni minimum glede na pH:</b> ${fmt(minFree)} mg/L prostega SO₂</div>`
+    : `<div><b>pH opozorilo:</b> tabela priporočene minimalne vrednosti velja približno za pH 2,90–3,80.</div>`;
+
+  const targetWarning=(minFree!==null&&target<minFree)
+    ? `<div style="margin-top:8px;color:#a32626;font-weight:800">⚠️ Želeni končni prosti SO₂ je nižji od priporočene vrednosti glede na pH.</div>`
+    : '';
+
+  box.innerHTML=`
+    <div><b>Količina vina:</b> ${fmt(volume)} L</div>
+    <div><b>pH:</b> ${fmt(ph)}</div>
+    <div><b>Želeni končni prosti SO₂:</b> ${fmt(target)} mg/L</div>
+    ${phInfo}
+    ${targetWarning}
+    <hr style="border:0;border-top:1px solid var(--line);margin:10px 0">
+    <div><b>Orientacijski začetni vnos SO₂:</b> ${fmt(initialSo2MgL)} mg/L</div>
+    <div><b>Odmerek 5 % H₂SO₃:</b> ${fmt(mlPer100L)} mL / 100 L</div>
+    <div class="calc-main-result"><b>Dodaj skupaj:</b> ${fmt(totalMl)} mL 5 % H₂SO₃</div>
+    <div style="font-size:12px;margin-top:6px">≈ <b>${fmt(totalDl)} dL</b>${totalL>=1?` oziroma <b>${fmt(totalL)} L</b>`:''}</div>
+    <div style="font-size:12px;margin-top:8px">Kontrolna meritev prostega SO₂ po približno 5–7 dneh je priporočljiva.</div>
   `;
 }
 
