@@ -431,7 +431,7 @@
     <div id="authError" class="auth-error"></div>
   </div>
 </div>
-<header class="topbar"><h1 id="screenTitle">Kletarska evidenca</h1><div class="sub">Kletarska evidenca - Vinska klet Lipec · v69</div>
+<header class="topbar"><h1 id="screenTitle">Kletarska evidenca</h1><div class="sub">Kletarska evidenca - Vinska klet Lipec · v70</div>
     <button class="app-close-btn" type="button" aria-label="Zapri aplikacijo" onclick="closeLipecApp()">×</button></header>
 <main>
 <section id="screen-home" class="screen active">
@@ -628,9 +628,10 @@
     </div>
 
     <div class="notice" style="margin-top:14px;font-size:12px">
-      Osnova: 5 % H₂SO₃ vsebuje približno 50 mg SO₂/mL.
-      Pri prvem žveplanju je uporabljena orientacijska rezerva zaradi vezave:
-      začetni vnos ≈ <b>1,5 × želeni končni prosti SO₂</b>.
+      Izračun uporablja praktično pH-tabelo prvega žveplanja.
+      Višji pH pomeni večji potreben začetni odmerek.
+      Osnovna tabela je nastavljena na približno <b>35 mg/L prostega SO₂ po 5–7 dneh</b>,
+      nato se odmerek prilagodi glede na tvoj izbrani cilj.
       Po približno enem tednu je priporočljiva kontrolna meritev prostega SO₂.
     </div>
   </div>
@@ -5199,25 +5200,44 @@ function calculateSo2Addition(){
   `;
 }
 
-const FIRST_SULFUR_PH_TABLE=[
-  [2.90,11],[3.00,13],[3.10,16],[3.20,21],[3.30,26],
-  [3.40,32],[3.50,40],[3.60,50],[3.70,63],[3.80,79]
+const FIRST_SULFUR_PRACTICAL_TABLE=[
+  // pH min, pH max, practical first dose range mL 5% H2SO3 / 100 L
+  [2.90,3.00,80,100],
+  [3.01,3.10,90,110],
+  [3.11,3.20,100,120],
+  [3.21,3.30,110,130],
+  [3.31,3.40,120,140],
+  [3.41,3.50,130,150],
+  [3.51,3.60,150,170]
 ];
 
-function firstSulfurMinimumFreeSo2(ph){
+function firstSulfurPracticalDose(ph,target){
   const x=Number(String(ph??'').replace(',','.'));
-  if(!Number.isFinite(x))return null;
-  const t=FIRST_SULFUR_PH_TABLE;
-  if(x<t[0][0]||x>t[t.length-1][0])return null;
-  for(let i=0;i<t.length;i++){
-    if(Math.abs(x-t[i][0])<0.000001)return t[i][1];
-    if(i<t.length-1&&x>t[i][0]&&x<t[i+1][0]){
-      const a=t[i],b=t[i+1];
-      const f=(x-a[0])/(b[0]-a[0]);
-      return a[1]+f*(b[1]-a[1]);
-    }
-  }
-  return null;
+  const tgt=Number(String(target??'').replace(',','.'));
+
+  if(!Number.isFinite(x)||!Number.isFinite(tgt))return null;
+
+  const row=FIRST_SULFUR_PRACTICAL_TABLE.find(r=>x>=r[0]&&x<=r[1]);
+  if(!row)return null;
+
+  // Sredina praktičnega razpona je osnovni odmerek za cilj ~35 mg/L
+  const baseDose=(row[2]+row[3])/2;
+
+  // 5% H2SO3: približno 1 mL/100 L = 0.5 mg/L SO2.
+  // Zato vsakih 1 mg/L razlike od 35 mg/L pomeni približno 2 mL/100 L.
+  const targetCorrection=(tgt-35)*2;
+
+  const dosePer100=Math.max(0,baseDose+targetCorrection);
+
+  return {
+    phMin:row[0],
+    phMax:row[1],
+    rangeMin:row[2],
+    rangeMax:row[3],
+    baseDose:baseDose,
+    targetCorrection:targetCorrection,
+    dosePer100:dosePer100
+  };
 }
 
 function calculateFirstSulfur(){
@@ -5231,39 +5251,67 @@ function calculateFirstSulfur(){
     box.innerHTML='Vnesi količino vina, pH in želeni končni prosti SO₂.';
     return;
   }
-  if(volume<=0){box.innerHTML='<b>Količina vina mora biti večja od 0 L.</b>';return;}
-  if(ph<2.8||ph>4.2){box.innerHTML='<b>Preveri pH.</b> Vnesena vrednost ni običajna za vino.';return;}
-  if(target<=0){box.innerHTML='<b>Želeni končni prosti SO₂ mora biti večji od 0 mg/L.</b>';return;}
 
-  const minFree=firstSulfurMinimumFreeSo2(ph);
-  const initialSo2MgL=target*1.5;
-  const totalMl=(initialSo2MgL*volume)/50;
-  const mlPer100L=totalMl/(volume/100);
+  if(volume<=0){
+    box.innerHTML='<b>Količina vina mora biti večja od 0 L.</b>';
+    return;
+  }
+
+  if(target<=0){
+    box.innerHTML='<b>Želeni končni prosti SO₂ mora biti večji od 0 mg/L.</b>';
+    return;
+  }
+
+  const calc=firstSulfurPracticalDose(ph,target);
+
+  if(!calc){
+    box.innerHTML=
+      '<b>pH je izven praktične tabele.</b><br>'+
+      'Ta izračun je pripravljen za pH 2,90–3,60. '+
+      'Pri višjem pH je potrebno odmerek določiti posebej.';
+    return;
+  }
+
+  const totalMl=calc.dosePer100*(volume/100);
   const totalDl=totalMl/100;
   const totalL=totalMl/1000;
 
-  const phInfo=minFree!==null
-    ? `<div><b>Priporočeni minimum glede na pH:</b> ${fmt(minFree)} mg/L prostega SO₂</div>`
-    : `<div><b>pH opozorilo:</b> tabela priporočene minimalne vrednosti velja približno za pH 2,90–3,80.</div>`;
+  const baseRangeText=
+    `${fmt(calc.rangeMin)}–${fmt(calc.rangeMax)} mL / 100 L`;
 
-  const targetWarning=(minFree!==null&&target<minFree)
-    ? `<div style="margin-top:8px;color:#a32626;font-weight:800">⚠️ Želeni končni prosti SO₂ je nižji od priporočene vrednosti glede na pH.</div>`
-    : '';
+  const correctionText=
+    calc.targetCorrection>0
+      ? `+${fmt(calc.targetCorrection)} mL / 100 L`
+      : calc.targetCorrection<0
+        ? `${fmt(calc.targetCorrection)} mL / 100 L`
+        : `0 mL / 100 L`;
 
   box.innerHTML=`
     <div><b>Količina vina:</b> ${fmt(volume)} L</div>
     <div><b>pH:</b> ${fmt(ph)}</div>
     <div><b>Želeni končni prosti SO₂:</b> ${fmt(target)} mg/L</div>
-    ${phInfo}
-    ${targetWarning}
+
     <hr style="border:0;border-top:1px solid var(--line);margin:10px 0">
-    <div><b>Orientacijski začetni vnos SO₂:</b> ${fmt(initialSo2MgL)} mg/L</div>
-    <div><b>Odmerek 5 % H₂SO₃:</b> ${fmt(mlPer100L)} mL / 100 L</div>
+
+    <div><b>pH razred:</b> ${calc.phMin.toFixed(2).replace('.',',')}–${calc.phMax.toFixed(2).replace('.',',')}</div>
+    <div><b>Praktični osnovni razpon:</b> ${baseRangeText}</div>
+    <div><b>Osnovni odmerek za cilj 35 mg/L:</b> ${fmt(calc.baseDose)} mL / 100 L</div>
+    <div><b>Prilagoditev za cilj ${fmt(target)} mg/L:</b> ${correctionText}</div>
+
+    <hr style="border:0;border-top:1px solid var(--line);margin:10px 0">
+
+    <div><b>Končni odmerek:</b> ${fmt(calc.dosePer100)} mL 5 % H₂SO₃ / 100 L</div>
     <div class="calc-main-result"><b>Dodaj skupaj:</b> ${fmt(totalMl)} mL 5 % H₂SO₃</div>
-    <div style="font-size:12px;margin-top:6px">≈ <b>${fmt(totalDl)} dL</b>${totalL>=1?` oziroma <b>${fmt(totalL)} L</b>`:''}</div>
-    <div style="font-size:12px;margin-top:8px">Kontrolna meritev prostega SO₂ po približno 5–7 dneh je priporočljiva.</div>
+    <div style="font-size:12px;margin-top:6px">
+      ≈ <b>${fmt(totalDl)} dL</b>${totalL>=1?` oziroma <b>${fmt(totalL)} L</b>`:''}
+    </div>
+
+    <div class="notice" style="margin-top:10px;font-size:12px">
+      Po 5–7 dneh izmeri prosti SO₂ in po potrebi naredi korekcijo.
+    </div>
   `;
 }
+
 
 function num(v){const n=Number(String(v??'').replace(',','.'));return isNaN(n)?0:n}function fmt(v){return new Intl.NumberFormat('sl-SI',{maximumFractionDigits:1}).format(num(v))}function fmtMoney(v){return new Intl.NumberFormat('sl-SI',{minimumFractionDigits:2,maximumFractionDigits:2}).format(num(v))}function escapeHtml(s){return String(s??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]))}function escapeJs(s){return String(s??'').replace(/\\/g,'\\\\').replace(/'/g,"\\'")}
 </script>
