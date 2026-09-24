@@ -431,7 +431,7 @@
     <div id="authError" class="auth-error"></div>
   </div>
 </div>
-<header class="topbar"><h1 id="screenTitle">Kletarska evidenca</h1><div class="sub">Kletarska evidenca - Vinska klet Lipec · v71</div>
+<header class="topbar"><h1 id="screenTitle">Kletarska evidenca</h1><div class="sub">Kletarska evidenca - Vinska klet Lipec · v72</div>
     <button class="app-close-btn" type="button" aria-label="Zapri aplikacijo" onclick="closeLipecApp()">×</button></header>
 <main>
 <section id="screen-home" class="screen active">
@@ -981,7 +981,7 @@
 <section id="screen-warehouse-tanks" class="screen">
   <div class="row" style="margin-top:4px;align-items:center;gap:8px">
     <div class="section-title" style="margin:0;flex:1">🛢️ Zaloga v cisternah</div>
-    <button class="btn btn-soft btn-small" type="button" onclick="syncBalancesFromTransfers()">🔄 Uskladi iz PRETOKI</button>
+    
   </div>
   <div id="tankStockSummary" style="margin-top:10px"></div>
   <div class="screen-back-wrap"><button class="btn btn-soft screen-back-btn" type="button" onclick="goBack()">← Nazaj</button></div>
@@ -1479,7 +1479,7 @@
   <div class="two"><div><label>Začetni °Oe</label><input inputmode="decimal" name="Zacetni_Oe"></div><div><label>Ciljni sladkor (g/L)</label><input inputmode="decimal" name="Ciljni_sladkor_gL"></div></div><label>Opomba</label><textarea name="Opomba"></textarea><button class="btn btn-primary" type="submit">Shrani vino</button>
 </form></div></div>
 <script>
-let DATA={wines:[],tanks:[],tankBalances:[],warehouse:[],sales:[],customers:[],grapePurchases:[],grapeOrigins:[],grapeSuppliers:[],lookups:{}};let currentWineId=null;let currentTankId=null;let currentStockId=null;let selectedSaleId='';let currentQrUrl='';let currentStockQrUrl='';let targetQrScanner=null;let qrMediaStream=null;let qrScanRaf=null;let qrScanning=false;let qrLastFrameAt=0;let qrSelectionMode='transferTarget';let transferContextTankId='';let procedureContextTankId='';let pendingSaleWineId='';let pendingStockId='';let GOOGLE_ACCESS_TOKEN='';let GOOGLE_TOKEN_EXPIRES_AT=0;let GOOGLE_TOKEN_CLIENT=null;let CURRENT_GOOGLE_EMAIL='';const URL_PARAMS=new URLSearchParams(location.search);const INITIAL_TANK=URL_PARAMS.get('cisterna')||'';const INITIAL_STOCK=URL_PARAMS.get('zaloga')||'';const TITLES={home:'Kletarska evidenca',klet:'🏠 Klet',calculations:'🧮 Izračuni',calcalk:'🍷 Izračun ALK',calcsugar:'🍬 Izračun sladkorja',calcso2:'🧪 Izračun SO₂',firstsulfur:'⚗️ Prvo žveplanje',wines:'🍷 Vina',procedure:'➕ Nov postopek',analysis:'🧪 Analiza',costs:'💳 Stroški',bottling:'🍾 Stekleničenje',sale:'💶 Prodaja',warehouse:'📦 Skladišče','warehouse-tanks':'🛢️ Zaloga v cisternah','warehouse-bottles':'🍾 Zaloga v steklenicah','warehouse-grapes':'🍇 Nakup grozdja',transfer:'🔄 Pretok',tanks:'🛢️ Cisterne'};let CURRENT_SCREEN='home';let SCREEN_HISTORY=[];
+let DATA={wines:[],tanks:[],tankBalances:[],blendComponents:[],warehouse:[],sales:[],customers:[],grapePurchases:[],grapeOrigins:[],grapeSuppliers:[],lookups:{}};let currentWineId=null;let currentTankId=null;let currentStockId=null;let selectedSaleId='';let currentQrUrl='';let currentStockQrUrl='';let targetQrScanner=null;let qrMediaStream=null;let qrScanRaf=null;let qrScanning=false;let qrLastFrameAt=0;let qrSelectionMode='transferTarget';let transferContextTankId='';let procedureContextTankId='';let pendingSaleWineId='';let pendingStockId='';let GOOGLE_ACCESS_TOKEN='';let GOOGLE_TOKEN_EXPIRES_AT=0;let GOOGLE_TOKEN_CLIENT=null;let CURRENT_GOOGLE_EMAIL='';const URL_PARAMS=new URLSearchParams(location.search);const INITIAL_TANK=URL_PARAMS.get('cisterna')||'';const INITIAL_STOCK=URL_PARAMS.get('zaloga')||'';const TITLES={home:'Kletarska evidenca',klet:'🏠 Klet',calculations:'🧮 Izračuni',calcalk:'🍷 Izračun ALK',calcsugar:'🍬 Izračun sladkorja',calcso2:'🧪 Izračun SO₂',firstsulfur:'⚗️ Prvo žveplanje',wines:'🍷 Vina',procedure:'➕ Nov postopek',analysis:'🧪 Analiza',costs:'💳 Stroški',bottling:'🍾 Stekleničenje',sale:'💶 Prodaja',warehouse:'📦 Skladišče','warehouse-tanks':'🛢️ Zaloga v cisternah','warehouse-bottles':'🍾 Zaloga v steklenicah','warehouse-grapes':'🍇 Nakup grozdja',transfer:'🔄 Pretok',tanks:'🛢️ Cisterne'};let CURRENT_SCREEN='home';let SCREEN_HISTORY=[];
 document.addEventListener('DOMContentLoaded',initStandaloneApp);
 function setLoading(v){document.getElementById('loader').classList.toggle('show',v)}
 function toast(msg){const t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');clearTimeout(window._tt);window._tt=setTimeout(()=>t.classList.remove('show'),3000)}
@@ -2142,9 +2142,11 @@ function renderTanks(){
         <div class="qty">${fmt(used)} / ${fmt(cap)} L${used>cap+0.0001?' ⚠️':''}</div>
       </div>
       <div class="tank-use">${
-        occupants.length
-          ? occupants.map(w=>`${escapeHtml(w.Naziv_vina||w.ID_vina)} – ${fmt(w.Trenutna_kolicina_L)} L`).join('<br>')
-          : 'Prazna / brez dodeljenega vina'
+        occupants.length===1
+          ? `${escapeHtml(occupants[0].Naziv_vina||occupants[0].ID_vina)} – ${fmt(occupants[0].Trenutna_kolicina_L)} L`
+          : occupants.length>1
+            ? `Mešano vino – ${fmt(used)} L`
+            : 'Prazna / brez dodeljenega vina'
       }</div>
       <div class="tank-actions">
         <button class="btn btn-soft btn-small" type="button" onclick="event.stopPropagation();openTank('${escapeJs(t.ID_cisterne)}')">Odpri</button>
@@ -2438,61 +2440,17 @@ function numValue(v){
 }
 
 function renderTankStockSummary(){
-  const box=document.getElementById('tankStockSummary');
-  if(!box)return;
-
-  let rows=(DATA.tankBalances||[])
-    .filter(b=>num(b.Kolicina_L)>0.0001)
-    .map(b=>{
-      const w=(DATA.wines||[]).find(x=>String(x.ID_vina)===String(b.ID_vina));
-      return w?{...b,wine:w}:null;
-    })
-    .filter(Boolean);
-
-  // Če je nova tabela STANJE_CISTERN še prazna, ne pokaži napačnih 0 L.
-  // Do backend migracije uporabi obstoječe stanje iz registra VINA.
-  if(!rows.length){
-    rows=(DATA.wines||[])
-      .filter(w=>String(w.Trenutna_cisterna||'').trim()!=='' && num(w.Trenutna_kolicina_L)>0.0001)
-      .map(w=>({
-        ID_vina:w.ID_vina,
-        ID_cisterne:w.Trenutna_cisterna,
-        Kolicina_L:num(w.Trenutna_kolicina_L),
-        wine:w
-      }));
-  }
-
+  const box=document.getElementById('tankStockSummary'); if(!box)return;
+  let sourceRows=(DATA.tankBalances||[]).filter(b=>num(b.Kolicina_L)>0.0001).map(b=>{const w=(DATA.wines||[]).find(x=>String(x.ID_vina)===String(b.ID_vina));return w?{...b,wine:w}:null;}).filter(Boolean);
+  if(!sourceRows.length){sourceRows=(DATA.wines||[]).filter(w=>String(w.Trenutna_cisterna||'').trim()!==''&&num(w.Trenutna_kolicina_L)>0.0001).map(w=>({ID_vina:w.ID_vina,ID_cisterne:w.Trenutna_cisterna,Kolicina_L:num(w.Trenutna_kolicina_L),wine:w}));}
+  const grouped=new Map(); sourceRows.forEach(r=>{const tankId=String(r.ID_cisterne||''); if(tankId){if(!grouped.has(tankId))grouped.set(tankId,[]); grouped.get(tankId).push(r);}});
+  const rows=[...grouped.entries()].map(([tankId,items])=>{const total=items.reduce((s,r)=>s+num(r.Kolicina_L),0); const names=[...new Set(items.map(r=>r.wine.Naziv_vina||r.wine.ID_vina))]; const ids=[...new Set(items.map(r=>r.ID_vina))]; return {ID_cisterne:tankId,Kolicina_L:total,Naziv_vina:names.length===1?names[0]:'Mešano vino',ID_vina:ids.length===1?ids[0]:'',mixed:ids.length>1};});
   const total=rows.reduce((sum,r)=>sum+num(r.Kolicina_L),0);
-
-  if(!rows.length){
-    box.innerHTML=`<div class="tank-stock-summary">
-      <div class="tank-stock-total">🛢️ V cisternah: 0 L</div>
-      <div class="muted">Trenutno ni evidentirane zaloge vina v cisternah.</div>
-    </div>`;
-    return;
-  }
-
-  const body=rows
-    .sort((a,b)=>String(a.wine.Naziv_vina||'').localeCompare(String(b.wine.Naziv_vina||''),'sl'))
-    .map(r=>{
-      const tank=(DATA.tanks||[]).find(t=>String(t.ID_cisterne)===String(r.ID_cisterne));
-      const tankText=tank
-        ? `${tank.ID_cisterne||r.ID_cisterne} · ${fmt(tank.Prostornina_L)} L`
-        : r.ID_cisterne;
-      return `<div class="tank-stock-row">
-        <div>
-          <div class="tank-stock-name">${escapeHtml(r.wine.Naziv_vina||r.wine.ID_vina)}</div>
-          <div class="tank-stock-meta">${escapeHtml(tankText)}</div>
-        </div>
-        <div class="tank-stock-qty">${fmt(r.Kolicina_L)} L</div>
-      </div>`;
-    }).join('');
-
-  box.innerHTML=`<div class="tank-stock-summary">
-    <div class="tank-stock-total">🛢️ Skupaj v cisternah: ${fmt(total)} L</div>
-    ${body}
-  </div>`;
+  if(!rows.length){box.innerHTML=`<div class="tank-stock-summary"><div class="tank-stock-total">🛢️ V cisternah: 0 L</div><div class="muted">Trenutno ni evidentirane zaloge vina v cisternah.</div></div>`;return;}
+  const body=rows.sort((a,b)=>String(a.ID_cisterne).localeCompare(String(b.ID_cisterne),'sl',{numeric:true})).map(r=>{const tank=(DATA.tanks||[]).find(t=>String(t.ID_cisterne)===String(r.ID_cisterne)); const tankText=tank?`${tank.ID_cisterne||r.ID_cisterne} · ${fmt(tank.Prostornina_L)} L`:r.ID_cisterne; return `<div class="tank-stock-row"><div><div class="tank-stock-name">${escapeHtml(r.Naziv_vina)}</div><div class="tank-stock-meta">${escapeHtml(tankText)}${r.mixed?' · ⚠️ neusklajene stare serije':''}</div></div><div class="tank-stock-qty">${fmt(r.Kolicina_L)} L</div></div>`;}).join('');
+  box.innerHTML=`<div class="tank-stock-summary"><div class="tank-stock-total">🛢️ Skupaj v cisternah: ${fmt(total)} L</div>${body}</div>`;
 }
+
 function costDateValue(c){
   return String(c.Datum||'');
 }
@@ -2825,6 +2783,10 @@ function updateTransferCapacityInfo(){
   const projected=info.current+delivered;
   const over=projected-info.capacity;
 
+  const wineId=f.querySelector('[name="ID_vina"]')?.value||'';
+  const targetOccupants=tankBalanceRows(to);
+  const differentSeries=targetOccupants.some(b=>String(b.ID_vina)!==String(wineId));
+
   box.style.display='block';
   box.innerHTML=
     `<b>${escapeHtml(info.tank.ID_cisterne||to)}</b> · prostornina ${fmt(info.capacity)} L · `+
@@ -2834,6 +2796,9 @@ function updateTransferCapacityInfo(){
         (over>0
           ? ` <span style="color:#a32626;font-weight:800">— PRESEŽENO ZA ${fmt(over)} L</span>`
           : ` · ostane prosto ${fmt(Math.max(0,info.capacity-projected))} L`)
+      : '')+
+    (differentSeries
+      ? `<br><b>Mešanje:</b> v ciljni cisterni je druga serija vina. Po pretoku bo samodejno ustvarjena <b>nova serija vina</b>.`
       : '');
 }
 
@@ -4763,11 +4728,11 @@ async function syncBalancesFromTransfers(){
 function submitTransfer(e){
   e.preventDefault();
   callSave('saveTransfer',formObj(e.target),(res)=>{
-    if(res&&Array.isArray(res.tankBalances)){
-      DATA.tankBalances=res.tankBalances;
-      renderTanks();
-      renderTankStockSummary();
-    }
+    if(res&&Array.isArray(res.tankBalances))DATA.tankBalances=res.tankBalances;
+    if(res&&Array.isArray(res.wines)){DATA.wines=res.wines;fillAll();renderHomeWines();renderWines();}
+    if(res&&Array.isArray(res.blendComponents))DATA.blendComponents=res.blendComponents;
+    renderTanks();
+    renderTankStockSummary();
     e.target.reset();
     unlockTransferContext();
     queueSilentRefresh(400);
