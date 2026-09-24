@@ -13,7 +13,7 @@
     :root{--green:#1f4e3d;--green2:#2f6a53;--bg:#f5f6f3;--card:#fff;--text:#17211b;--muted:#66736b;--line:#dde3df;--safe-top:env(safe-area-inset-top);--safe-bottom:env(safe-area-inset-bottom)}
     *{box-sizing:border-box} html,body{margin:0;background:var(--bg);font-family:-apple-system,BlinkMacSystemFont,"SF Pro Text","Segoe UI",sans-serif;color:var(--text)}
     body{padding-top:var(--safe-top);padding-bottom:calc(82px + var(--safe-bottom))} button,input,select,textarea{font:inherit}
-    .topbar{position:relative;position:sticky;top:0;z-index:20;background:rgba(245,246,243,.94);backdrop-filter:blur(12px);padding:14px 52px 10px 8px;border-bottom:1px solid var(--line)}
+    .topbar{position:relative;position:sticky;top:0;z-index:20;background:rgba(245,246,243,.94);backdrop-filter:blur(12px);padding:14px 92px 10px 8px;border-bottom:1px solid var(--line)}
     .topbar h1{margin:0;font-size:24px}.topbar .sub{font-size:13px;color:var(--muted);margin-top:2px} main{padding:14px;max-width:760px;margin:0 auto}
     .screen{display:none}.screen.active{display:block}.grid{display:grid;gap:12px}.card,.form-card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:15px;box-shadow:0 1px 2px rgba(0,0,0,.03)}
     .wine-card{cursor:pointer}.row{display:flex;align-items:center;justify-content:space-between;gap:12px}.title{font-weight:750;font-size:18px}.meta{font-size:13px;color:var(--muted);margin-top:5px}
@@ -152,6 +152,27 @@
     .tank-stock-meta{font-size:11px;color:var(--muted);margin-top:2px}
     .tank-stock-qty{font-weight:800;white-space:nowrap}
 
+    .app-refresh-btn{
+      position:absolute;
+      top:8px;
+      right:50px;
+      width:34px;
+      height:34px;
+      border:0;
+      border-radius:50%;
+      background:rgba(255,255,255,.92);
+      color:#1f4e3d;
+      font-size:23px;
+      line-height:34px;
+      padding:0;
+      cursor:pointer;
+      box-shadow:0 1px 5px rgba(0,0,0,.15);
+      z-index:5;
+      font-weight:800;
+    }
+    .app-refresh-btn:active{transform:scale(.96)}
+    .app-refresh-btn.refreshing{animation:lipecRefreshSpin .8s linear infinite}
+    @keyframes lipecRefreshSpin{to{transform:rotate(360deg)}}
     .app-close-btn{
       position:absolute;
       top:8px;
@@ -196,7 +217,7 @@
     /* v40: logo skrajno levo, X skrajno desno */
     .topbar{
       padding-left:8px !important;
-      padding-right:52px !important;
+      padding-right:92px !important;
     }
     .app-brand-logo{
       left:10px !important;
@@ -395,7 +416,7 @@
     /* v64: logo ni več v glavi, zato glava ne rezervira prostora na levi */
     .topbar{
       padding-left:8px !important;
-      padding-right:52px !important;
+      padding-right:92px !important;
     }
     .topbar h1,
     .topbar .sub{
@@ -431,7 +452,8 @@
     <div id="authError" class="auth-error"></div>
   </div>
 </div>
-<header class="topbar"><h1 id="screenTitle">Kletarska evidenca</h1><div class="sub">Kletarska evidenca - Vinska klet Lipec · v72</div>
+<header class="topbar"><h1 id="screenTitle">Kletarska evidenca</h1><div class="sub">Kletarska evidenca - Vinska klet Lipec · v73</div>
+    <button id="appRefreshBtn" class="app-refresh-btn" type="button" aria-label="Osveži podatke" title="Osveži podatke iz Drive tabele" onclick="manualRefreshData()">↻</button>
     <button class="app-close-btn" type="button" aria-label="Zapri aplikacijo" onclick="closeLipecApp()">×</button></header>
 <main>
 <section id="screen-home" class="screen active">
@@ -1561,6 +1583,53 @@ async function refreshDataSilently(){
   }
 }
 
+
+async function manualRefreshData(){
+  const btn=document.getElementById('appRefreshBtn');
+  if(btn&&btn.disabled)return;
+
+  if(btn){
+    btn.disabled=true;
+    btn.classList.add('refreshing');
+  }
+
+  setLoading(true);
+  toast('Osvežujem podatke iz Drive tabele …');
+
+  try{
+    // getBootstrapData vsakič ponovno prebere trenutno vsebino Drive tabele.
+    // Ne uporabljamo lokalnega DATA predpomnilnika.
+    const data=await apiRun('getBootstrapData',[]);
+    if(!data)throw new Error('Strežnik ni vrnil podatkov.');
+
+    DATA=data;
+    DATA.webAppUrl=(location.origin+location.pathname).replace(/\/$/,'');
+
+    fillAll();
+    renderHomeWines();
+    renderWines();
+    renderTanks();
+    renderWarehouse();
+    renderGrapePurchases();
+    renderCosts();
+    renderCustomerRegister();
+    setDefaults();
+
+    const now=new Date();
+    const hh=String(now.getHours()).padStart(2,'0');
+    const mm=String(now.getMinutes()).padStart(2,'0');
+    const ss=String(now.getSeconds()).padStart(2,'0');
+    toast(`Podatki osveženi ob ${hh}:${mm}:${ss}.`);
+  }catch(err){
+    fail(err);
+  }finally{
+    setLoading(false);
+    if(btn){
+      btn.disabled=false;
+      btn.classList.remove('refreshing');
+    }
+  }
+}
 
 function closeLipecApp(){
   const ok=confirm('Želiš zapreti aplikacijo?');
