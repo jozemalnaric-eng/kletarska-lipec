@@ -431,7 +431,7 @@
     <div id="authError" class="auth-error"></div>
   </div>
 </div>
-<header class="topbar"><h1 id="screenTitle">Kletarska evidenca</h1><div class="sub">Kletarska evidenca - Vinska klet Lipec · v70</div>
+<header class="topbar"><h1 id="screenTitle">Kletarska evidenca</h1><div class="sub">Kletarska evidenca - Vinska klet Lipec · v71</div>
     <button class="app-close-btn" type="button" aria-label="Zapri aplikacijo" onclick="closeLipecApp()">×</button></header>
 <main>
 <section id="screen-home" class="screen active">
@@ -979,8 +979,11 @@
 </section>
 
 <section id="screen-warehouse-tanks" class="screen">
-  <div class="section-title" style="margin-top:4px">🛢️ Zaloga v cisternah</div>
-  <div id="tankStockSummary"></div>
+  <div class="row" style="margin-top:4px;align-items:center;gap:8px">
+    <div class="section-title" style="margin:0;flex:1">🛢️ Zaloga v cisternah</div>
+    <button class="btn btn-soft btn-small" type="button" onclick="syncBalancesFromTransfers()">🔄 Uskladi iz PRETOKI</button>
+  </div>
+  <div id="tankStockSummary" style="margin-top:10px"></div>
   <div class="screen-back-wrap"><button class="btn btn-soft screen-back-btn" type="button" onclick="goBack()">← Nazaj</button></div>
 </section>
 
@@ -4717,6 +4720,46 @@ function submitSale(e){
     showScreen('warehouse');
   });
 }
+
+async function syncBalancesFromTransfers(){
+  const ok=confirm(
+    'Uskladim trenutno stanje cistern iz zavihka PRETOKI?\n\n'+
+    'Aplikacija bo spremenila samo vina, pri katerih je celotna zgodovina pretokov matematično pravilna. Sporni zapisi bodo preskočeni.'
+  );
+  if(!ok)return;
+
+  setLoading(true);
+  try{
+    const res=await apiRun('syncTankBalancesFromTransfers',[]);
+    if(res&&Array.isArray(res.tankBalances)){
+      DATA.tankBalances=res.tankBalances;
+      renderTanks();
+      renderTankStockSummary();
+      renderHomeWines();
+      renderWines();
+    }
+
+    const lines=[];
+    if(res.updated&&res.updated.length){
+      lines.push('USKLAJENO:\n- '+res.updated.join('\n- '));
+    }
+    if(res.errors&&res.errors.length){
+      lines.push('NAPAKE V PRETOKI:\n- '+res.errors.join('\n- '));
+    }
+    if(res.skipped&&res.skipped.length){
+      lines.push('PRESKOČENO:\n- '+res.skipped.join('\n- '));
+    }
+
+    alert(lines.join('\n\n') || (res.message||'Uskladitev končana.'));
+    toast(res.message||'Uskladitev končana.');
+    queueSilentRefresh(300);
+  }catch(err){
+    fail(err);
+  }finally{
+    setLoading(false);
+  }
+}
+
 function submitTransfer(e){
   e.preventDefault();
   callSave('saveTransfer',formObj(e.target),(res)=>{
